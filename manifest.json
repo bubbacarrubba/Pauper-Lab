@@ -10,12 +10,7 @@
   "description": "Un'app per testare e gestire i mazzi Pauper di Magic: The Gathering.",
   "icons": [
     {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icon-512.png",
+      "src": "https://bubbacarrubba.github.io/Pauper-Lab/icona.png",
       "sizes": "512x512",
       "type": "image/png"
     }
