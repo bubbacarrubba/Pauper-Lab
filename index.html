@@ -68,7 +68,7 @@
         /* DROPDOWN PREDIZIONI VISIVE */
         .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-top: 6px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 1000; }
         .autocomplete-results.show { display: block; }
-        .autocomplete-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.15s; }
+        .autocomplete-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.15s; }
         .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item:hover, .autocomplete-item:active { background: var(--bg-card-subtle); }
         .autocomplete-thumb { width: 32px; height: 44px; border-radius: 4px; background: #222; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
@@ -132,7 +132,7 @@
         .modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card-subtle); border: 1px solid var(--border-color); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
         /* BOTTOM NAVBAR */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--bg-dark); border-top: 1px solid var(--border-color); display: flex; justify-around: space-around; align-items: center; z-index: 200; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--bg-dark); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 200; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 500; cursor: pointer; border: none; background: none; flex: 1; }
         .nav-item .icon { font-size: 18px; margin-bottom: 3px; }
         .nav-item.active { color: var(--accent-lime); }
@@ -381,6 +381,11 @@
             <div class="modal-close" onclick="chiudiModal('modalSettings')">✕</div>
             <div class="deck-breadcrumb">OPZIONI</div>
             <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">Impostazioni</h2>
+            
+            <button class="btn-outline" style="border-color:var(--accent-lime); color:var(--accent-lime); width:100%; margin-bottom:8px;" onclick="esportaDatiJSON()">📥 Esporta Backup (JSON)</button>
+            <button class="btn-outline" style="border-color:var(--accent-lime); color:var(--accent-lime); width:100%; margin-bottom:12px;" onclick="document.getElementById('inputImportJSON').click()">📤 Importa Backup (JSON)</button>
+            <input type="file" id="inputImportJSON" accept=".json" style="display:none;" onchange="importaDatiJSON(event)">
+
             <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%;" onclick="pulisciCacheImmagini()">🧹 Pulisci Tutta la Cache Immagini</button>
             <button class="btn-lime" style="margin-top:12px;" onclick="chiudiModal('modalSettings')">✓ Chiudi</button>
         </div>
@@ -394,6 +399,13 @@
         let autocompleteTimer = null;
         let cardFacesCorrenti = [];
         let indexFaceCorrente = 0;
+
+        /* CHIUSURA DROPDOWN CON CLICK FUORI DALL'INPUT */
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.quick-add-wrapper')) {
+                document.querySelectorAll('.autocomplete-results').forEach(el => el.classList.remove('show'));
+            }
+        });
 
         function setNavActive(btn) {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -870,7 +882,7 @@
             document.getElementById('lblTotalSideCards').innerText = sideTotal + " carte";
         }
 
-        /* --- AUTOCOMPLETE CON MINI-IMMAGINI IN TEMPO REALE --- */
+        /* --- AUTOCOMPLETE OTTIMIZZATO ED ESATTO --- */
         function gestisciAutocomplete(valore, isSide) {
             clearTimeout(autocompleteTimer);
             const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
@@ -885,27 +897,31 @@
 
             autocompleteTimer = setTimeout(async () => {
                 try {
-                    // Scryfall API per ricerca con anteprime visive
-                    const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&unique=cards`);
+                    // Usiamo l'endpoint di autocomplete nativo di Scryfall per nomi esatti
+                    const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(query)}`);
                     if (!res.ok) return;
                     const data = await res.json();
-                    const carteTrovate = data.data || [];
+                    const nomiTrovati = data.data || [];
 
-                    if (carteTrovate.length === 0) { dropdown.classList.remove('show'); return; }
+                    if (nomiTrovati.length === 0) { dropdown.classList.remove('show'); return; }
 
                     dropdown.innerHTML = '';
                     dropdown.classList.add('show');
 
-                    for (let card of carteTrovate.slice(0, 5)) {
-                        const nome = card.name;
-                        
-                        // Cerca l'anteprima dell'immagine
+                    // Prendiamo i primi 5 nomi corretti e carichiamo le loro anteprime
+                    for (let nome of nomiTrovati.slice(0, 5)) {
                         let thumbUrl = '';
-                        if (card.image_uris && card.image_uris.art_crop) {
-                            thumbUrl = card.image_uris.art_crop;
-                        } else if (card.card_faces && card.card_faces[0].image_uris) {
-                            thumbUrl = card.card_faces[0].image_uris.art_crop;
-                        }
+                        try {
+                            const resCard = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(nome)}`);
+                            if (resCard.ok) {
+                                const cardData = await resCard.json();
+                                if (cardData.image_uris && cardData.image_uris.art_crop) {
+                                    thumbUrl = cardData.image_uris.art_crop;
+                                } else if (cardData.card_faces && cardData.card_faces[0].image_uris) {
+                                    thumbUrl = cardData.card_faces[0].image_uris.art_crop;
+                                }
+                            }
+                        } catch(e) {}
 
                         const item = document.createElement('div');
                         item.className = 'autocomplete-item';
@@ -924,12 +940,17 @@
                         dropdown.appendChild(item);
                     }
                 } catch (e) { console.error("Errore autocomplete:", e); }
-            }, 250);
+            }, 200);
         }
 
         async function aggiungiCartaRapida(isSide = false) {
             const inputNameId = isSide ? 'quickAddSideName' : 'quickAddName';
             const inputQtaId = isSide ? 'quickAddSideQta' : 'quickAddQta';
+            const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
+
+            // Chiudi il menu a tendina
+            document.getElementById(dropdownId).classList.remove('show');
+
             const currentDeck = db.find(d => d.id == activeDeckId);
             if (!currentDeck) return;
 
@@ -1046,6 +1067,67 @@
         function apriModalMazzi() { renderElencoMazziModale(); document.getElementById('modalMazziList').style.display = 'flex'; }
         function apriModalSettings() { document.getElementById('modalSettings').style.display = 'flex'; }
         function chiudiModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        /* --- IMPORT & EXPORT JSON --- */
+        function esportaDatiJSON() {
+            const backupData = {
+                pauper_decks: db,
+                pauper_matches: dbMatches,
+                exportDate: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pauper_lab_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importaDatiJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!imported.pauper_decks || !Array.isArray(imported.pauper_decks)) {
+                        throw new Error("Formato backup non valido.");
+                    }
+
+                    if (confirm("Vuoi sovrascrivere o unire i mazzi importati?\n\n[OK] = Sovrascrivi dati attuali\n[Annulla] = Unisci ai dati esistenti")) {
+                        db = imported.pauper_decks;
+                        dbMatches = imported.pauper_matches || [];
+                    } else {
+                        const existingDeckIds = new Set(db.map(d => d.id));
+                        imported.pauper_decks.forEach(d => {
+                            if (!existingDeckIds.has(d.id)) db.push(d);
+                        });
+
+                        const existingMatchIds = new Set(dbMatches.map(m => m.id));
+                        (imported.pauper_matches || []).forEach(m => {
+                            if (!existingMatchIds.has(m.id)) dbMatches.push(m);
+                        });
+                    }
+
+                    localStorage.setItem('pauper_decks', JSON.stringify(db));
+                    localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+
+                    if (db.length > 0) {
+                        activeDeckId = db[0].id;
+                        localStorage.setItem('active_deck_id', activeDeckId);
+                    }
+
+                    renderUI();
+                    chiudiModal('modalSettings');
+                    alert("Backup importato con successo!");
+                } catch (err) {
+                    alert("Errore durante l'importazione del file JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
 
         /* --- GESTIONE ELENCO MAZZI ED ELIMINAZIONE CASCATA --- */
         function renderElencoMazziModale() {
