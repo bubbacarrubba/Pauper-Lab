@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pauper Lab</title>
+    <title>Pauper Lab - Testing & Matrix</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +19,11 @@
             --text-orange: #e07a5f;
             --border-color: #272a28;
             --border-radius: 16px;
+
+            /* Matrix Colors */
+            --win-green: #2e7d32;
+            --even-yellow: #f57f17;
+            --loss-red: #c62828;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -31,7 +36,7 @@
         .deck-title { font-size: 20px; font-weight: 700; color: #fff; }
 
         /* MOTTO BOX */
-        .motto-card { background: var(--bg-card); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-lime); border-radius: 12px; padding: 12px 16px; margin: 16px 16px 16px 16px; font-style: italic; font-size: 13px; color: var(--text-muted); text-align: center; }
+        .motto-card { background: var(--bg-card); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-lime); border-radius: 12px; padding: 12px 16px; margin: 16px; font-style: italic; font-size: 13px; color: var(--text-muted); text-align: center; }
 
         /* DECK HEADER CARD */
         .deck-header-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 16px; margin: 0 16px 12px 16px; display: flex; gap: 16px; align-items: center; }
@@ -40,8 +45,11 @@
         .deck-meta-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; color: #fff; }
         .deck-meta-date { font-size: 12px; color: var(--text-muted); }
 
+        /* TEST BADGE */
+        .badge-test { background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime); color: var(--accent-lime); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; display: inline-block; margin-left: 6px; }
+
         /* ACTION BAR UNDER HEADER */
-        .deck-actions-bar { padding: 0 16px 16px 16px; display: flex; gap: 10px; }
+        .deck-actions-bar { padding: 0 16px 16px 16px; display: flex; gap: 8px; overflow-x: auto; }
 
         /* SUB TABS NAVIGATION */
         .sub-tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-dark); padding: 0 16px; gap: 20px; overflow-x: auto; }
@@ -76,7 +84,8 @@
         .visual-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
         .visual-card-badge { position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.75); border: 1px solid var(--border-color); color: var(--accent-lime); font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; backdrop-filter: blur(4px); }
-        
+        .test-tag-indicator { position: absolute; top: 8px; left: 8px; background: var(--accent-lime); color: #000; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+
         .visual-card-footer { padding: 8px; display: flex; flex-direction: column; background: var(--bg-card); gap: 6px; }
         .visual-card-name { font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
         
@@ -85,27 +94,29 @@
         .btn-qty:active { background: var(--border-color); }
         .qty-display { font-size: 13px; font-weight: 700; color: var(--accent-lime); }
 
-        /* CARD LIST ITEM */
-        .card-item-row { background: var(--bg-card); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border-color); }
-        .card-item-left { display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer; }
-        .card-thumb { width: 42px; height: 42px; border-radius: 8px; background: #222523; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .card-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
-        .card-subtext { font-size: 11px; color: var(--text-muted); }
-        .card-actions { display: flex; align-items: center; gap: 8px; }
-        .btn-star { background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; color: var(--text-muted); cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; font-weight: 600; width: 100%; justify-content: center; margin-bottom: 8px; }
-        .btn-star.active { color: var(--accent-lime); border-color: var(--accent-lime); }
+        /* MATCHUP MATRIX TABLE */
+        .matrix-container { overflow-x: auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        .matrix-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; }
+        .matrix-table th, .matrix-table td { padding: 10px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
+        .matrix-table th { background: var(--bg-card-subtle); color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 10px; }
+        .matrix-cell-win { background: rgba(46, 125, 50, 0.25); color: #81c784; font-weight: 700; }
+        .matrix-cell-even { background: rgba(245, 127, 23, 0.25); color: #ffd54f; font-weight: 700; }
+        .matrix-cell-loss { background: rgba(198, 40, 40, 0.25); color: #e57373; font-weight: 700; }
 
-        /* PRINTINGS ART PICKER GRID */
-        .art-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; background: var(--bg-card-subtle); padding: 8px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 12px; }
-        .art-option { border-radius: 6px; overflow: hidden; border: 2px solid transparent; cursor: pointer; aspect-ratio: 488 / 680; background: #111; position: relative; }
-        .art-option.selected { border-color: var(--accent-lime); }
-        .art-option img { width: 100%; height: 100%; object-fit: cover; }
-        .art-option-set { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); font-size: 9px; color: #fff; text-align: center; padding: 2px; text-transform: uppercase; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* TEST COMPARISON CARDS */
+        .version-compare-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+        .diff-tag-in { color: #81c784; font-size: 11px; font-weight: 600; }
+        .diff-tag-out { color: #e57373; font-size: 11px; font-weight: 600; text-decoration: line-through; }
+
+        /* ARTWORKS PICKER GRID */
+        .art-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; margin-bottom: 12px; padding: 4px; background: var(--bg-card-subtle); border-radius: 8px; border: 1px solid var(--border-color); }
+        .art-picker-item { aspect-ratio: 488 / 680; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+        .art-picker-item.selected { border-color: var(--accent-lime); }
+        .art-picker-item img { width: 100%; height: 100%; object-fit: cover; }
 
         /* BUTTONS */
         .btn-lime { background: var(--accent-lime); color: #000; font-weight: 700; font-size: 14px; border: none; border-radius: 12px; padding: 14px; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-        .btn-outline { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); font-weight: 600; font-size: 13px; border-radius: 10px; padding: 10px; width: 100%; cursor: pointer; margin-bottom: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-outline { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); font-weight: 600; font-size: 12px; border-radius: 10px; padding: 8px 12px; cursor: pointer; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
 
         /* FORM INPUTS */
         input, select, textarea { width: 100%; background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; }
@@ -117,18 +128,14 @@
         .page.active { display: block; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 300; justify-content: center; align-items: flex-start; padding: 16px; overflow-y: auto; }
-        .modal-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px; width: 100%; max-width: 400px; margin-top: 20px; margin-bottom: 220px; position: relative; }
+        .modal-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px; width: 100%; max-width: 420px; margin-top: 20px; margin-bottom: 120px; position: relative; }
         .modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card-subtle); border: 1px solid var(--border-color); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
         /* BOTTOM NAVBAR */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--bg-dark); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 200; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--bg-dark); border-top: 1px solid var(--border-color); display: flex; justify-around: space-around; align-items: center; z-index: 200; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 500; cursor: pointer; border: none; background: none; flex: 1; }
         .nav-item .icon { font-size: 18px; margin-bottom: 3px; }
         .nav-item.active { color: var(--accent-lime); }
-
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .metric-box { background: var(--bg-card-subtle); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .metric-value { font-size: 18px; font-weight: 700; color: var(--accent-lime); }
     </style>
 </head>
 <body>
@@ -152,21 +159,24 @@
     <div class="deck-header-card">
         <div class="deck-cover-placeholder" id="deckCover">🎴</div>
         <div>
-            <div class="deck-meta-title" id="lblActiveDeckName">Nessun Mazzo</div>
+            <div style="display:flex; align-items:center;">
+                <div class="deck-meta-title" id="lblActiveDeckName">Nessun Mazzo</div>
+                <span id="lblTestBadge"></span>
+            </div>
             <div class="deck-meta-date" id="lblActiveDeckVersion">Seleziona o crea un mazzo</div>
         </div>
     </div>
 
     <!-- ACTION BAR UNDER HEADER -->
     <div class="deck-actions-bar">
-        <button class="btn-outline" style="margin:0;" id="btnPriorita" onclick="ruotaPrioritaMazzoCorrente()">⭐ Priorità: Media</button>
-        <button class="btn-outline" style="margin:0;" onclick="apriModalModificaMazzoCorrente()">✏️ Modifica Mazzo</button>
+        <button class="btn-outline" style="border-color: var(--accent-lime); color: var(--accent-lime); width: 100%;" onclick="apriModalCreaVersioneTest()">🧪 Nuova Versione Test</button>
     </div>
 
     <!-- SUB TABS NAVIGATION -->
     <div class="sub-tabs">
         <button class="sub-tab active" id="tab-lista" onclick="switchSubTab('lista', this)">Lista</button>
         <button class="sub-tab" id="tab-partite" onclick="switchSubTab('partite', this)">Partite</button>
+        <button class="sub-tab" id="tab-matrice" onclick="switchSubTab('matrice', this)">Matrice & Testing</button>
     </div>
 
     <!-- PAGE: LISTA CARTE -->
@@ -175,8 +185,8 @@
         <div class="section-label" style="margin-top:16px;">AGGIUNGI CARTA RAPIDA MAINBOARD</div>
         <div class="quick-add-wrapper">
             <div class="quick-add-box">
-                <input type="number" id="quickAddQta" value="1" min="1" max="4" style="width: 60px; text-align: center; margin:0;" title="Qtà">
-                <input type="text" id="quickAddName" placeholder="Nome carta (es. Counterspell...)" style="margin:0; flex:1;" autocomplete="off" oninput="gestisciAutocomplete(this.value, false)" onkeydown="if(event.key==='Enter') aggiungiCartaRapida(false)">
+                <input type="number" id="quickAddQta" value="1" min="1" max="4" style="width: 50px; text-align: center; margin:0;" title="Qtà">
+                <input type="text" id="quickAddName" placeholder="Es. Counterspell..." style="margin:0; flex:1;" autocomplete="off" oninput="gestisciAutocomplete(this.value, false)" onkeydown="if(event.key==='Enter') aggiungiCartaRapida(false)">
                 <button class="btn-lime" style="width: auto; margin:0; padding: 12px 16px;" onclick="aggiungiCartaRapida(false)">+</button>
             </div>
             <div id="autocompleteDropdownMain" class="autocomplete-results"></div>
@@ -187,16 +197,14 @@
             <span id="lblTotalCards">0 carte</span>
         </div>
 
-        <div class="card-grid" id="mainboardCardGrid">
-            <p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0; grid-column: span 2;">Nessuna carta presente. Crea o seleziona un mazzo dal menu.</p>
-        </div>
+        <div class="card-grid" id="mainboardCardGrid"></div>
 
         <!-- SIDEBOARD ADD -->
         <div class="section-label" style="margin-top: 28px;">AGGIUNGI CARTA RAPIDA SIDEBOARD</div>
         <div class="quick-add-wrapper">
             <div class="quick-add-box">
-                <input type="number" id="quickAddSideQta" value="1" min="1" max="4" style="width: 60px; text-align: center; margin:0;" title="Qtà">
-                <input type="text" id="quickAddSideName" placeholder="Nome carta Side (es. Hydroblast...)" style="margin:0; flex:1;" autocomplete="off" oninput="gestisciAutocomplete(this.value, true)" onkeydown="if(event.key==='Enter') aggiungiCartaRapida(true)">
+                <input type="number" id="quickAddSideQta" value="1" min="1" max="4" style="width: 50px; text-align: center; margin:0;" title="Qtà">
+                <input type="text" id="quickAddSideName" placeholder="Es. Hydroblast..." style="margin:0; flex:1;" autocomplete="off" oninput="gestisciAutocomplete(this.value, true)" onkeydown="if(event.key==='Enter') aggiungiCartaRapida(true)">
                 <button class="btn-lime" style="width: auto; margin:0; padding: 12px 16px;" onclick="aggiungiCartaRapida(true)">+</button>
             </div>
             <div id="autocompleteDropdownSide" class="autocomplete-results"></div>
@@ -207,9 +215,7 @@
             <span id="lblTotalSideCards">0 carte</span>
         </div>
 
-        <div class="card-grid" id="sideboardCardGrid">
-            <p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0; grid-column: span 2;">Nessuna carta in Sideboard.</p>
-        </div>
+        <div class="card-grid" id="sideboardCardGrid"></div>
     </div>
 
     <!-- PAGE: PARTITE -->
@@ -219,6 +225,29 @@
             <button class="btn-lime" onclick="apriModalNuovaPartita()">+ Registra Nuova Partita</button>
             <div id="historicoPartite"></div>
         </div>
+    </div>
+
+    <!-- PAGE: MATRICE & TESTING -->
+    <div id="subpage-matrice" class="page">
+        <div class="section-label">MATRICE MATCHUP (ESCLUSIVA MAZZO ATTUALE)</div>
+        <div style="padding:0 16px;">
+            <div class="matrix-container">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">ARCHETIPO</th>
+                            <th>W</th>
+                            <th>L</th>
+                            <th>WIN %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixTbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-label">CONFRONTO VERSIONI TEST & MADRE</div>
+        <div style="padding:0 16px;" id="boxConfrontoVersioni"></div>
     </div>
 
     <!-- BOTTOM NAVBAR -->
@@ -235,39 +264,13 @@
             <span class="icon">⚔️</span>
             <span>Partite</span>
         </button>
-        <button class="nav-item" id="navStats" onclick="apriModalStats(); setNavActive(this);">
+        <button class="nav-item" id="navStats" onclick="switchSubTab('matrice', document.getElementById('tab-matrice')); setNavActive(this);">
             <span class="icon">📊</span>
-            <span>Stats</span>
+            <span>Matrice</span>
         </button>
     </div>
 
-    <!-- MODAL: CREA / EDIT MAZZO -->
-    <div class="modal-overlay" id="modalCreaMazzo">
-        <div class="modal-card">
-            <div class="modal-close" onclick="chiudiModal('modalCreaMazzo')">✕</div>
-            <div class="deck-breadcrumb" style="margin-bottom:8px;">CONFIGURAZIONE</div>
-            <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;" id="modalTitleAction">Crea / Modifica Mazzo</h2>
-            
-            <input type="hidden" id="editDeckId" value="">
-
-            <label>NOME MAZZO</label>
-            <input type="text" id="inputDeckName" placeholder="Es. Mono Blue Terror">
-
-            <label>CARICA LISTA DA FILE .TXT</label>
-            <button type="button" class="btn-outline" onclick="document.getElementById('fileDeckInput').click()">📁 Carica file .txt</button>
-            <input type="file" id="fileDeckInput" accept=".txt" style="display:none" onchange="gestisciFileTxt(event)">
-
-            <label>MAINBOARD (Formato: 4 Counterspell)</label>
-            <textarea id="inputDeckList" rows="6" placeholder="4 Counterspell&#10;4 Delver of Secrets"></textarea>
-
-            <label>SIDEBOARD (Formato: 2 Hydroblast)</label>
-            <textarea id="inputSideboardList" rows="4" placeholder="2 Hydroblast&#10;2 Dispel"></textarea>
-
-            <button class="btn-lime" onclick="salvaMazzoUI()">✓ Salva e Aggiorna</button>
-        </div>
-    </div>
-
-    <!-- MODAL: DETTAGLIO CARTA CON CAMBIO ARTWORK -->
+    <!-- MODAL: DETTAGLIO CARTA (WITH ARTWORK PICKER & FLIP) -->
     <div class="modal-overlay" id="modalDetailCard">
         <div class="modal-card">
             <div class="modal-close" onclick="chiudiModal('modalDetailCard')">✕</div>
@@ -275,45 +278,44 @@
             <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;" id="mdlCardTitle">Carta</h2>
             
             <div style="border-radius:12px; overflow:hidden; background:#000; margin-bottom:12px; text-align:center; position:relative;">
-                <img id="mdlCardImg" src="" style="max-width:100%; height:auto; max-height:45vh; object-fit:contain; border-radius:8px; transition: transform 0.2s ease-in-out;">
+                <img id="mdlCardImg" src="" style="max-width:100%; height:auto; max-height:40vh; object-fit:contain; border-radius:8px;">
             </div>
 
-            <button class="btn-outline" id="btnFlipCard" style="display:none; margin-bottom:8px;" onclick="giraCartaModal()">🔄 Gira Carta</button>
-            
-            <button class="btn-outline" id="btnToggleArtPicker" onclick="caricaStampeCarta()">🎨 Cambia Artwork / Edizione</button>
-            <div id="artPickerContainer" style="display:none;">
-                <label>SELEZIONA EDIZIONE / ARTWORK</label>
-                <div class="art-picker-grid" id="artPickerGrid">
-                    <div style="grid-column: span 3; text-align: center; color: var(--text-muted); padding: 10px; font-size:12px;">Caricamento edizioni...</div>
-                </div>
+            <!-- TASTO FLIP BIFACCIALE -->
+            <button class="btn-outline" id="btnFlipCard" style="display:none; width:100%; margin-bottom:8px; border-color:var(--accent-lime); color:var(--accent-lime);" onclick="ruotaCartaBifacciale()">🔄 Gira Carta (Lato B)</button>
+
+            <!-- CONTENITORE ARTWORKS ALTERNATIVE -->
+            <div id="artworksContainer" style="display:none;">
+                <label>SELEZIONA ARTWORK / EDIZIONE</label>
+                <div id="artworksGrid" class="art-picker-grid"></div>
             </div>
 
-            <button class="btn-star" id="btnSetAvatar" onclick="impostaComeAvatarCorrente()">⭐ Imposta come Copertina Mazzo</button>
-
-            <label style="margin-top: 10px;">QUANTITÀ NEL MAZZO</label>
-            <div class="card-qty-controls" style="margin-bottom:16px; padding: 4px 12px;">
-                <button class="btn-qty" onclick="modificaQuantitaCartaDaModale(-1)">−</button>
-                <span class="qty-display" id="mdlCardQtyDisplay" style="font-size:16px;">0x</span>
-                <button class="btn-qty" onclick="modificaQuantitaCartaDaModale(1)">＋</button>
-            </div>
-
-            <div class="metric-box" style="margin-bottom:12px;">
-                <label>MAZZO</label>
-                <div style="font-size:13px; font-weight:600;" id="mdlCardDeck">-</div>
-            </div>
+            <button class="btn-outline" style="width:100%; margin-bottom:8px;" onclick="forzaRiscarticaImmagineCartaCorrente()">🔄 Riscarica / Forza Immagine</button>
+            <button class="btn-outline" style="width:100%; margin-bottom:8px;" onclick="caricaEdizioniAlternativeScryfall()">🖼️ Cambia Artwork / Edizione</button>
+            <button class="btn-outline" id="btnSetAvatar" style="width:100%; margin-bottom:12px;" onclick="impostaComeAvatarCorrente()">⭐ Imposta come Copertina</button>
 
             <button class="btn-lime" onclick="chiudiModal('modalDetailCard')">✓ Chiudi</button>
         </div>
     </div>
 
-    <!-- MODAL: ARCHIVIO MAZZI -->
-    <div class="modal-overlay" id="modalMazziList">
+    <!-- MODAL: NUOVA VERSIONE TEST (FORK) -->
+    <div class="modal-overlay" id="modalForkTest">
         <div class="modal-card">
-            <div class="modal-close" onclick="chiudiModal('modalMazziList')">✕</div>
-            <div class="deck-breadcrumb">ARCHIVIO</div>
-            <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">I Miei Mazzi</h2>
-            <div id="boxElencoMazziModale"></div>
-            <button class="btn-lime" style="margin-top:12px;" onclick="chiudiModal('modalMazziList'); apriModalCreaMazzo();">+ Nuovo Mazzo</button>
+            <div class="modal-close" onclick="chiudiModal('modalForkTest')">✕</div>
+            <div class="deck-breadcrumb">TESTING LAB</div>
+            <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;">Crea Versione Test</h2>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Stai creando una sotto-versione per testare nuove carte isolando le statistiche.</p>
+
+            <label>NOME VERSIONE / TEST ID</label>
+            <input type="text" id="forkVersionName" placeholder="Es. v1.1 - Test Lorien Revealed">
+
+            <label>CARTE AGGIUNTE (IN - Separa con virgola)</label>
+            <input type="text" id="forkCardsIn" placeholder="Es. 2 Lorien Revealed, 1 Spell Pierce">
+
+            <label>CARTE RIMOSSE (OUT - Separa con virgola)</label>
+            <input type="text" id="forkCardsOut" placeholder="Es. 2 Island, 1 Dispel">
+
+            <button class="btn-lime" onclick="confermaCreaVersioneTest()">🧪 Genera Versione Test</button>
         </div>
     </div>
 
@@ -325,7 +327,7 @@
             <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">Nuova Partita</h2>
 
             <label>ARCHETIPO AVVERSARIO</label>
-            <input type="text" id="matchOpponent" placeholder="Es. Kuldotha Red">
+            <input type="text" id="matchOpponent" placeholder="Es. Kuldotha Red, Affinity...">
 
             <label>RISULTATO</label>
             <select id="matchResult">
@@ -341,60 +343,59 @@
                 <option value="Draw">On the Draw (Inizia l'altro)</option>
             </select>
 
+            <div id="testFeedbackSection" style="display:none; background:var(--bg-card-subtle); padding:12px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:12px;">
+                <label style="color:var(--accent-lime)">🧪 VALUTAZIONE CARTE IN TEST</label>
+                <div id="testCardsFeedbackList"></div>
+            </div>
+
             <button class="btn-lime" onclick="salvaMatchUI()">✓ Registra Match</button>
         </div>
     </div>
 
-    <!-- MODAL: STATISTICHE -->
-    <div class="modal-overlay" id="modalStats">
+    <!-- MODAL: ARCHIVIO MAZZI -->
+    <div class="modal-overlay" id="modalMazziList">
         <div class="modal-card">
-            <div class="modal-close" onclick="chiudiModal('modalStats')">✕</div>
-            <div class="deck-breadcrumb">ANALISI</div>
-            <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">Statistiche Mazzo</h2>
-            <div class="grid-2" style="margin-bottom:16px;">
-                <div class="metric-box">
-                    <label>TOTALE MATCH</label>
-                    <div class="metric-value" id="stTotalMatches">0</div>
-                </div>
-                <div class="metric-box">
-                    <label>WIN RATE</label>
-                    <div class="metric-value" id="stWinRate">0%</div>
-                </div>
-            </div>
-
-            <button class="btn-lime" style="margin-top:12px;" onclick="chiudiModal('modalStats')">✓ Chiudi</button>
+            <div class="modal-close" onclick="chiudiModal('modalMazziList')">✕</div>
+            <div class="deck-breadcrumb">ARCHIVIO</div>
+            <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">I Miei Mazzi</h2>
+            <div id="boxElencoMazziModale"></div>
+            <button class="btn-lime" style="margin-top:12px;" onclick="chiudiModal('modalMazziList'); apriModalNuovoMazzo();">+ Nuovo Mazzo</button>
         </div>
     </div>
 
-    <!-- MODAL: IMPOSTAZIONI / OPZIONI -->
+    <!-- MODAL: NUOVO MAZZO INIZIALE -->
+    <div class="modal-overlay" id="modalNuovoMazzo">
+        <div class="modal-card">
+            <div class="modal-close" onclick="chiudiModal('modalNuovoMazzo')">✕</div>
+            <div class="deck-breadcrumb">CREA MAZZO</div>
+            <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">Crea Nuovo Mazzo</h2>
+            
+            <label>NOME MAZZO</label>
+            <input type="text" id="inputNewDeckName" placeholder="Es. Mono Blue Terror">
+
+            <button class="btn-lime" onclick="creaNuovoMazzoIniziale()">✓ Crea e Apri</button>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPOSTAZIONI -->
     <div class="modal-overlay" id="modalSettings">
         <div class="modal-card">
             <div class="modal-close" onclick="chiudiModal('modalSettings')">✕</div>
-            <div class="deck-breadcrumb">OPZIONI & MANUTENZIONE</div>
+            <div class="deck-breadcrumb">OPZIONI</div>
             <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">Impostazioni</h2>
-
-            <label>GESTIONE ARCHIVIO LOCALE</label>
-            <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange);" onclick="pulisciCacheImmagini()">🧹 Pulisci Cache Immagini (Fix Immagini Mancanti)</button>
-
+            <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%;" onclick="pulisciCacheImmagini()">🧹 Pulisci Tutta la Cache Immagini</button>
             <button class="btn-lime" style="margin-top:12px;" onclick="chiudiModal('modalSettings')">✓ Chiudi</button>
         </div>
     </div>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/Pauper-Lab/sw.js')
-                    .then((reg) => console.log('SW registrato!', reg))
-                    .catch((err) => console.log('SW fallito', err));
-            });
-        }
-
         let db = JSON.parse(localStorage.getItem('pauper_decks')) || [];
         let dbMatches = JSON.parse(localStorage.getItem('pauper_matches')) || [];
         let activeDeckId = localStorage.getItem('active_deck_id') || null;
         let cartaCorrenteSelezionata = null;
-        let latoCorrenteModale = 'front';
         let autocompleteTimer = null;
+        let cardFacesCorrenti = [];
+        let indexFaceCorrente = 0;
 
         function setNavActive(btn) {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -412,12 +413,9 @@
             if(topTab) topTab.classList.add('active');
             else if(el) el.classList.add('active');
 
-            if(tabName === 'partite') {
-                renderPartite();
-                setNavActive(document.getElementById('navPartite'));
-            } else if(tabName === 'lista') {
-                setNavActive(document.getElementById('navHome'));
-            }
+            if(tabName === 'partite') renderPartite();
+            if(tabName === 'matrice') renderMatriceETesting();
+            if(tabName === 'lista') setNavActive(document.getElementById('navHome'));
         }
 
         function tornaAllaHome() {
@@ -426,440 +424,372 @@
             setNavActive(document.getElementById('navHome'));
         }
 
-        function ruotaPrioritaMazzoCorrente() {
-            const currentDeck = db.find(d => d.id == activeDeckId);
-            if (!currentDeck) return;
+        /* --- DETTAGLIO CARTA, CACHE & ARTWORK PICKER --- */
+        async function mostraDettaglioCarta(nomeCarta) {
+            cartaCorrenteSelezionata = nomeCarta;
+            document.getElementById('mdlCardTitle').innerText = nomeCarta;
+            document.getElementById('artworksContainer').style.display = 'none';
+            document.getElementById('btnFlipCard').style.display = 'none';
+            cardFacesCorrenti = [];
+            indexFaceCorrente = 0;
 
-            const mappaPriorita = { 'Bassa': 'Media', 'Media': 'Alta', 'Alta': 'Bassa' };
-            const prioritaAttuale = currentDeck.priorita || 'Media';
-            currentDeck.priorita = mappaPriorita[prioritaAttuale] || 'Media';
+            const cacheImg = localStorage.getItem('img_cache_' + nomeCarta.toLowerCase());
+            const imgEl = document.getElementById('mdlCardImg');
 
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            renderUI();
-        }
-
-        function apriModalCreaMazzo() {
-            document.getElementById('editDeckId').value = '';
-            document.getElementById('modalTitleAction').innerText = 'Nuovo Mazzo';
-            document.getElementById('inputDeckName').value = '';
-            document.getElementById('inputDeckList').value = '';
-            document.getElementById('inputSideboardList').value = '';
-            document.getElementById('modalCreaMazzo').style.display = 'flex';
-        }
-
-        function apriModalModificaMazzoCorrente() {
-            const currentDeck = db.find(d => d.id == activeDeckId);
-            if (!currentDeck) { alert("Nessun mazzo selezionato da modificare!"); return; }
-
-            document.getElementById('editDeckId').value = currentDeck.id;
-            document.getElementById('modalTitleAction').innerText = 'Modifica Mazzo';
-            document.getElementById('inputDeckName').value = currentDeck.nome;
-
-            let testoMainboard = '';
-            if (currentDeck.carte) {
-                for (let [nome, qta] of Object.entries(currentDeck.carte)) {
-                    testoMainboard += `${qta} ${nome}\n`;
-                }
+            if(cacheImg) {
+                imgEl.src = cacheImg;
+            } else {
+                imgEl.src = '';
+                await forzaRiscarticaImmagineCartaCorrente();
             }
-            document.getElementById('inputDeckList').value = testoMainboard.trim();
 
-            let testoSideboard = '';
-            if (currentDeck.sideboard) {
-                for (let [nome, qta] of Object.entries(currentDeck.sideboard)) {
-                    testoSideboard += `${qta} ${nome}\n`;
-                }
-            }
-            document.getElementById('inputSideboardList').value = testoSideboard.trim();
-
-            document.getElementById('modalCreaMazzo').style.display = 'flex';
-        }
-
-        function apriModalMazzi() { renderElencoMazziModale(); document.getElementById('modalMazziList').style.display = 'flex'; }
-        function apriModalNuovaPartita() { document.getElementById('modalPartita').style.display = 'flex'; }
-        function apriModalStats() { renderStats(); document.getElementById('modalStats').style.display = 'flex'; }
-        function apriModalSettings() { document.getElementById('modalSettings').style.display = 'flex'; }
-        function chiudiModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        function pulisciCacheImmagini() {
-            if (confirm("Vuoi svuotare la cache delle immagini salvate? Verranno scaricate nuovamente da Scryfall.")) {
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('img_cache_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-                alert("Cache pulita con successo!");
-                chiudiModal('modalSettings');
-                renderUI();
-                const currentDeck = db.find(d => d.id == activeDeckId);
-                if (currentDeck && currentDeck.carte) {
-                    scaricaImmagini([...Object.keys(currentDeck.carte), ...Object.keys(currentDeck.sideboard || {})]).then(() => renderUI());
-                }
-            }
-        }
-
-        function gestisciFileTxt(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const testo = e.target.result;
-                const linee = testo.split('\n');
-                
-                let main = [];
-                let side = [];
-                let isSide = false;
-
-                linee.forEach(l => {
-                    const riga = l.trim();
-                    if (!riga) return;
-                    if (riga.toLowerCase().startsWith('sideboard')) {
-                        isSide = true;
-                        return;
-                    }
-                    if (isSide) side.push(riga);
-                    else main.push(riga);
-                });
-
-                document.getElementById('inputDeckList').value = main.join('\n');
-                document.getElementById('inputSideboardList').value = side.join('\n');
-
-                const inputName = document.getElementById('inputDeckName');
-                if (!inputName.value.trim()) {
-                    inputName.value = file.name.replace(/\.[^/.]+$/, "");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function parseListaCarte(testo) {
-            const carteParsed = {};
-            if (!testo) return carteParsed;
-            testo.split('\n').forEach(r => {
-                const m = r.trim().match(/^(\d+)\s+(.+)$/);
-                if (m) carteParsed[m[2].trim()] = parseInt(m[1]);
-            });
-            return carteParsed;
-        }
-
-        async function salvaMazzoUI() {
-            const editId = document.getElementById('editDeckId').value;
-            const nome = document.getElementById('inputDeckName').value.trim();
-            const testoMain = document.getElementById('inputDeckList').value.trim();
-            const testoSide = document.getElementById('inputSideboardList').value.trim();
-
-            if (!nome || !testoMain) { alert("Inserisci il nome ed almeno la mainboard!"); return; }
-
-            const carteParsed = parseListaCarte(testoMain);
-            const sideParsed = parseListaCarte(testoSide);
-
-            if (editId) {
-                const index = db.findIndex(d => d.id == editId);
-                if (index !== -1) {
-                    db[index].nome = nome;
-                    db[index].carte = carteParsed;
-                    db[index].sideboard = sideParsed;
-                    if (!db[index].priorita) db[index].priorita = 'Media';
-                    if (!db[index].featuredCard || !carteParsed[db[index].featuredCard]) {
-                        db[index].featuredCard = Object.keys(carteParsed)[0] || '';
-                    }
-                    activeDeckId = db[index].id;
+            // Controlla se la carta ha doppio fronte
+            const facesCache = localStorage.getItem('faces_cache_' + nomeCarta.toLowerCase());
+            if(facesCache) {
+                cardFacesCorrenti = JSON.parse(facesCache);
+                if(cardFacesCorrenti.length > 1) {
+                    document.getElementById('btnFlipCard').style.display = 'block';
                 }
             } else {
-                const nuovo = { 
-                    id: Date.now(), 
-                    nome, 
-                    carte: carteParsed, 
-                    sideboard: sideParsed,
-                    priorita: 'Media',
-                    featuredCard: Object.keys(carteParsed)[0] || '',
-                    data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) 
-                };
-                db.push(nuovo);
-                activeDeckId = nuovo.id;
+                await verificaDoppiaFaccia(nomeCarta);
             }
 
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            localStorage.setItem('active_deck_id', activeDeckId);
-
-            chiudiModal('modalCreaMazzo');
-            renderUI();
-            await scaricaImmagini([...Object.keys(carteParsed), ...Object.keys(sideParsed)]);
-            renderUI();
+            document.getElementById('modalDetailCard').style.display = 'flex';
         }
 
-        function gestisciAutocomplete(valore, isSide) {
-            clearTimeout(autocompleteTimer);
-            const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
-            const dropdown = document.getElementById(dropdownId);
-            const query = valore.trim();
+        async function verificaDoppiaFaccia(nomeCarta) {
+            try {
+                const cleanName = nomeCarta.split('//')[0].trim();
+                const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cleanName)}`);
+                if(!res.ok) return;
+                const data = await res.json();
 
-            if (query.length < 2) {
-                dropdown.classList.remove('show');
-                dropdown.innerHTML = '';
-                return;
+                if(data.card_faces && data.card_faces.length > 1 && data.card_faces[0].image_uris) {
+                    cardFacesCorrenti = data.card_faces.map(f => f.image_uris.normal);
+                    localStorage.setItem('faces_cache_' + nomeCarta.toLowerCase(), JSON.stringify(cardFacesCorrenti));
+                    document.getElementById('btnFlipCard').style.display = 'block';
+                }
+            } catch(e) {}
+        }
+
+        function ruotaCartaBifacciale() {
+            if(!cardFacesCorrenti || cardFacesCorrenti.length <= 1) return;
+            indexFaceCorrente = (indexFaceCorrente + 1) % cardFacesCorrenti.length;
+            document.getElementById('mdlCardImg').src = cardFacesCorrenti[indexFaceCorrente];
+        }
+
+        async function forzaRiscarticaImmagineCartaCorrente() {
+            if(!cartaCorrenteSelezionata) return;
+            const key = 'img_cache_' + cartaCorrenteSelezionata.toLowerCase();
+            localStorage.removeItem(key);
+
+            const imgEl = document.getElementById('mdlCardImg');
+            imgEl.style.opacity = '0.5';
+
+            try {
+                const cleanName = cartaCorrenteSelezionata.split('//')[0].trim();
+                const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cleanName)}`);
+                if (!res.ok) throw new Error("Carta non trovata");
+                const data = await res.json();
+                
+                let imgUrl = '';
+                if (data.image_uris && data.image_uris.normal) {
+                    imgUrl = data.image_uris.normal;
+                } else if (data.card_faces && data.card_faces[0].image_uris) {
+                    imgUrl = data.card_faces[0].image_uris.normal;
+                    cardFacesCorrenti = data.card_faces.map(f => f.image_uris.normal);
+                    localStorage.setItem('faces_cache_' + cartaCorrenteSelezionata.toLowerCase(), JSON.stringify(cardFacesCorrenti));
+                    document.getElementById('btnFlipCard').style.display = 'block';
+                }
+
+                if (imgUrl) {
+                    localStorage.setItem(key, imgUrl);
+                    imgEl.src = imgUrl;
+                    renderUI();
+                }
+            } catch (e) {
+                alert("Errore durante il riscaricamento dell'immagine.");
+            } finally {
+                imgEl.style.opacity = '1';
             }
+        }
 
-            autocompleteTimer = setTimeout(async () => {
-                try {
-                    const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(query)}`);
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    const nomiCarte = data.data || [];
+        async function caricaEdizioniAlternativeScryfall() {
+            if(!cartaCorrenteSelezionata) return;
+            const container = document.getElementById('artworksContainer');
+            const grid = document.getElementById('artworksGrid');
+            grid.innerHTML = '<div style="color:var(--text-muted); font-size:11px; grid-column:span 3; text-align:center; padding:10px;">Caricamento illustrazioni...</div>';
+            container.style.display = 'block';
 
-                    if (nomiCarte.length === 0) {
-                        dropdown.classList.remove('show');
-                        return;
+            try {
+                const cleanName = cartaCorrenteSelezionata.split('//')[0].trim();
+                // Utilizzo della sintassi esatta !"" per evitare risultati non pertinenti (es. Snuff Out)
+                const res = await fetch(`https://api.scryfall.com/cards/search?q=%21"${encodeURIComponent(cleanName)}"&unique=prints`);
+                
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+
+                grid.innerHTML = '';
+                const prints = data.data || [];
+
+                prints.forEach(print => {
+                    let imgUrl = '';
+                    if (print.image_uris && print.image_uris.normal) {
+                        imgUrl = print.image_uris.normal;
+                    } else if (print.card_faces && print.card_faces[0].image_uris) {
+                        imgUrl = print.card_faces[0].image_uris.normal;
                     }
 
-                    dropdown.innerHTML = '';
-                    dropdown.classList.add('show');
+                    if (!imgUrl) return;
 
-                    for (let nome of nomiCarte.slice(0, 5)) {
-                        const item = document.createElement('div');
-                        item.className = 'autocomplete-item';
+                    const item = document.createElement('div');
+                    item.className = 'art-picker-item';
+                    item.innerHTML = `<img src="${imgUrl}" title="${print.set_name}">`;
+                    item.onclick = () => {
+                        localStorage.setItem('img_cache_' + cartaCorrenteSelezionata.toLowerCase(), imgUrl);
+                        document.getElementById('mdlCardImg').src = imgUrl;
+                        document.querySelectorAll('.art-picker-item').forEach(el => el.classList.remove('selected'));
+                        item.classList.add('selected');
                         
-                        const cacheImg = localStorage.getItem('img_cache_' + nome.toLowerCase());
-                        
-                        item.innerHTML = `
-                            <div class="autocomplete-thumb">
-                                ${cacheImg ? `<img src="${cacheImg}">` : '🎴'}
-                            </div>
-                            <div class="autocomplete-name">${nome}</div>
-                        `;
-
-                        item.onclick = () => selezionaAutocomplete(nome, isSide);
-                        dropdown.appendChild(item);
-
-                        if (!cacheImg) {
-                            scaricaImmagini([nome]).then(() => {
-                                const nuovaImg = localStorage.getItem('img_cache_' + nome.toLowerCase());
-                                if (nuovaImg) {
-                                    const thumb = item.querySelector('.autocomplete-thumb');
-                                    if (thumb) thumb.innerHTML = `<img src="${nuovaImg}">`;
-                                }
-                            });
+                        if(print.card_faces && print.card_faces.length > 1) {
+                            cardFacesCorrenti = print.card_faces.map(f => f.image_uris.normal);
+                            localStorage.setItem('faces_cache_' + cartaCorrenteSelezionata.toLowerCase(), JSON.stringify(cardFacesCorrenti));
+                            document.getElementById('btnFlipCard').style.display = 'block';
                         }
-                    }
-                } catch (e) {
-                    console.error("Errore autocomplete:", e);
-                }
-            }, 250);
-        }
+                        renderUI();
+                    };
+                    grid.appendChild(item);
+                });
 
-        function selezionaAutocomplete(nomeCarta, isSide) {
-            const inputId = isSide ? 'quickAddSideName' : 'quickAddName';
-            const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
-            
-            document.getElementById(inputId).value = nomeCarta;
-            document.getElementById(dropdownId).classList.remove('show');
-            aggiungiCartaRapida(isSide);
-        }
-
-        document.addEventListener('click', (e) => {
-            const wrappers = document.querySelectorAll('.quick-add-wrapper');
-            wrappers.forEach(wrapper => {
-                if (!wrapper.contains(e.target)) {
-                    const dropdown = wrapper.querySelector('.autocomplete-results');
-                    if (dropdown) dropdown.classList.remove('show');
-                }
-            });
-        });
-
-        async function aggiungiCartaRapida(isSide = false) {
-            const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
-            const inputNameId = isSide ? 'quickAddSideName' : 'quickAddName';
-            const inputQtaId = isSide ? 'quickAddSideQta' : 'quickAddQta';
-
-            document.getElementById(dropdownId).classList.remove('show');
-            const currentDeck = db.find(d => d.id == activeDeckId);
-            if (!currentDeck) { alert("Seleziona o crea prima un mazzo!"); return; }
-
-            const qtaInput = parseInt(document.getElementById(inputQtaId).value) || 1;
-            const nomeInput = document.getElementById(inputNameId).value.trim();
-
-            if (!nomeInput) return;
-
-            if (isSide) {
-                if (!currentDeck.sideboard) currentDeck.sideboard = {};
-                let targetMap = currentDeck.sideboard;
-                
-                if (targetMap[nomeInput]) {
-                    targetMap[nomeInput] += qtaInput;
-                } else {
-                    let trovatoKey = Object.keys(targetMap).find(k => k.toLowerCase() === nomeInput.toLowerCase());
-                    if (trovatoKey) {
-                        targetMap[trovatoKey] += qtaInput;
-                    } else {
-                        targetMap[nomeInput] = qtaInput;
-                    }
-                }
-            } else {
-                if (!currentDeck.carte) currentDeck.carte = {};
-                let targetMap = currentDeck.carte;
-
-                if (targetMap[nomeInput]) {
-                    targetMap[nomeInput] += qtaInput;
-                } else {
-                    let trovatoKey = Object.keys(targetMap).find(k => k.toLowerCase() === nomeInput.toLowerCase());
-                    if (trovatoKey) {
-                        targetMap[trovatoKey] += qtaInput;
-                    } else {
-                        targetMap[nomeInput] = qtaInput;
-                        if (!currentDeck.featuredCard) currentDeck.featuredCard = nomeInput;
-                    }
-                }
-            }
-
-            document.getElementById(inputNameId).value = '';
-            document.getElementById(inputQtaId).value = '1';
-
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            renderUI();
-
-            await scaricaImmagini([nomeInput]);
-            renderUI();
-        }
-
-        async function modificaQuantita(nomeCarta, delta, isSide, event) {
-            if (event) event.stopPropagation();
-            const currentDeck = db.find(d => d.id == activeDeckId);
-            if (!currentDeck) return;
-
-            const mappaCarte = isSide ? (currentDeck.sideboard || {}) : (currentDeck.carte || {});
-
-            let qtaAttuale = mappaCarte[nomeCarta] || 0;
-            let nuovaQta = qtaAttuale + delta;
-
-            if (nuovaQta <= 0) {
-                if (confirm(`Vuoi rimuovere completamente "${nomeCarta}"?`)) {
-                    delete mappaCarte[nomeCarta];
-                    if (!isSide && currentDeck.featuredCard === nomeCarta) {
-                        currentDeck.featuredCard = Object.keys(currentDeck.carte)[0] || '';
-                    }
-                } else {
-                    return;
-                }
-            } else {
-                mappaCarte[nomeCarta] = nuovaQta;
-            }
-
-            if (isSide) currentDeck.sideboard = mappaCarte;
-            else currentDeck.carte = mappaCarte;
-
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            renderUI();
-
-            if (cartaCorrenteSelezionata === nomeCarta) {
-                const qtaAggiornata = mappaCarte[nomeCarta] || 0;
-                document.getElementById('mdlCardQtyDisplay').innerText = qtaAggiornata + 'x';
-                if (qtaAggiornata === 0) chiudiModal('modalDetailCard');
-            }
-        }
-
-        function modificaQuantitaCartaDaModale(delta) {
-            if (cartaCorrenteSelezionata) {
-                const currentDeck = db.find(d => d.id == activeDeckId);
-                const isSide = currentDeck && currentDeck.sideboard && (cartaCorrenteSelezionata in currentDeck.sideboard);
-                modificaQuantita(cartaCorrenteSelezionata, delta, isSide, null);
+            } catch (e) {
+                grid.innerHTML = '<div style="color:var(--text-orange); font-size:11px; grid-column:span 3; text-align:center; padding:10px;">Impossibile caricare altre illustrazioni per questa carta.</div>';
             }
         }
 
         function impostaComeAvatarCorrente() {
             const currentDeck = db.find(d => d.id == activeDeckId);
-            if (!currentDeck || !cartaCorrenteSelezionata) return;
-
+            if(!currentDeck || !cartaCorrenteSelezionata) return;
             currentDeck.featuredCard = cartaCorrenteSelezionata;
             localStorage.setItem('pauper_decks', JSON.stringify(db));
             renderUI();
-            
-            const btnAvatar = document.getElementById('btnSetAvatar');
-            btnAvatar.classList.add('active');
-            btnAvatar.innerText = "⭐ Copertina Impostata!";
-            setTimeout(() => {
-                btnAvatar.classList.remove('active');
-                btnAvatar.innerText = "⭐ Imposta come Copertina Mazzo";
-            }, 1500);
+            chiudiModal('modalDetailCard');
         }
 
-        async function caricaStampeCarta() {
-            const container = document.getElementById('artPickerContainer');
-            const grid = document.getElementById('artPickerGrid');
+        /* --- TEST FORKING --- */
+        function apriModalCreaVersioneTest() {
+            const currentDeck = db.find(d => d.id == activeDeckId);
+            if (!currentDeck) { alert("Seleziona o crea prima un mazzo!"); return; }
+            document.getElementById('forkVersionName').value = (currentDeck.nome || '') + ' - Test v1.1';
+            document.getElementById('forkCardsIn').value = '';
+            document.getElementById('forkCardsOut').value = '';
+            document.getElementById('modalForkTest').style.display = 'flex';
+        }
 
-            if (container.style.display === 'block') {
-                container.style.display = 'none';
-                return;
+        function confermaCreaVersioneTest() {
+            const currentDeck = db.find(d => d.id == activeDeckId);
+            if (!currentDeck) return;
+
+            const name = document.getElementById('forkVersionName').value.trim();
+            const cardsInStr = document.getElementById('forkCardsIn').value.trim();
+            const cardsOutStr = document.getElementById('forkCardsOut').value.trim();
+
+            if (!name) { alert("Inserisci un nome per la versione test!"); return; }
+
+            const parentId = currentDeck.parentId || currentDeck.id;
+
+            const newCarte = { ...currentDeck.carte };
+            const newSide = { ...currentDeck.sideboard };
+
+            const cardsInList = cardsInStr ? cardsInStr.split(',').map(s => s.trim()) : [];
+            const cardsOutList = cardsOutStr ? cardsOutStr.split(',').map(s => s.trim()) : [];
+
+            cardsInList.forEach(c => {
+                const match = c.match(/^(\d+)\s+(.+)$/);
+                if (match) newCarte[match[2].trim()] = parseInt(match[1]);
+                else if (c) newCarte[c] = 1;
+            });
+
+            cardsOutList.forEach(c => {
+                const match = c.match(/^(\d+)\s+(.+)$/);
+                const nameClean = match ? match[2].trim() : c;
+                delete newCarte[nameClean];
+                delete newSide[nameClean];
+            });
+
+            const newTestDeck = {
+                id: Date.now(),
+                parentId: parentId,
+                isTestVersion: true,
+                nome: name,
+                carte: newCarte,
+                sideboard: newSide,
+                testCardsIn: cardsInList,
+                testCardsOut: cardsOutList,
+                featuredCard: currentDeck.featuredCard || '',
+                data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+            };
+
+            db.push(newTestDeck);
+            activeDeckId = newTestDeck.id;
+            localStorage.setItem('pauper_decks', JSON.stringify(db));
+            localStorage.setItem('active_deck_id', activeDeckId);
+
+            chiudiModal('modalForkTest');
+            renderUI();
+            alert("Nuova versione test creata e selezionata!");
+        }
+
+        /* --- PARTITE & MATCHUP --- */
+        function apriModalNuovaPartita() {
+            const currentDeck = db.find(d => d.id == activeDeckId);
+            if (!currentDeck) { alert("Seleziona prima un mazzo!"); return; }
+
+            const feedbackSec = document.getElementById('testFeedbackSection');
+            const feedbackList = document.getElementById('testCardsFeedbackList');
+
+            if (currentDeck.isTestVersion && currentDeck.testCardsIn && currentDeck.testCardsIn.length > 0) {
+                feedbackSec.style.display = 'block';
+                feedbackList.innerHTML = '';
+
+                currentDeck.testCardsIn.forEach(cardName => {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '10px';
+                    div.innerHTML = `
+                        <div style="font-weight:600; font-size:12px; color:#fff;">${cardName}</div>
+                        <div style="display:flex; gap:6px; margin-top:4px;">
+                            <input type="number" placeholder="Pescate" class="test-seen-qty" data-card="${cardName}" style="width:70px; margin:0;" min="0">
+                            <select class="test-rating" data-card="${cardName}" style="margin:0;">
+                                <option value="Utile">Utile 👍</option>
+                                <option value="Determinante">Determinante 🌟</option>
+                                <option value="Neutra">Neutra 😐</option>
+                                <option value="Choke">Choke/Mano Chiodata 💀</option>
+                            </select>
+                        </div>
+                    `;
+                    feedbackList.appendChild(div);
+                });
+            } else {
+                feedbackSec.style.display = 'none';
             }
 
-            container.style.display = 'block';
-            grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: var(--text-muted); padding: 10px; font-size:12px;">Ricerca edizioni su Scryfall...</div>';
+            document.getElementById('modalPartita').style.display = 'flex';
+        }
 
-            try {
-                const nomePulito = cartaCorrenteSelezionata.split('//')[0].trim();
+        function salvaMatchUI() {
+            const currentDeck = db.find(d => d.id == activeDeckId);
+            if (!currentDeck) return;
 
-                const resCard = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(nomePulito)}`);
-                if (!resCard.ok) throw new Error("Carta non trovata");
-                const cardDataSingle = await resCard.json();
-                const oracleId = cardDataSingle.oracle_id;
+            const opp = document.getElementById('matchOpponent').value.trim();
+            const res = document.getElementById('matchResult').value;
+            const pd = document.getElementById('matchPlayDraw').value;
 
-                const resPrints = await fetch(`https://api.scryfall.com/cards/search?q=oracle_id%3A${oracleId}&unique=prints`);
-                if (!resPrints.ok) throw new Error("Impossibile recuperare le edizioni");
+            if(!opp) { alert("Inserisci l'archetipo avversario!"); return; }
 
-                const data = await resPrints.json();
-                const stampe = data.data || [];
+            const testFeedback = [];
+            if (currentDeck.isTestVersion) {
+                document.querySelectorAll('.test-seen-qty').forEach(input => {
+                    const cardName = input.dataset.card;
+                    const qty = parseInt(input.value) || 0;
+                    const ratingEl = document.querySelector(`.test-rating[data-card="${cardName}"]`);
+                    const rating = ratingEl ? ratingEl.value : 'Utile';
+                    testFeedback.push({ card: cardName, seen: qty, rating });
+                });
+            }
 
-                grid.innerHTML = '';
-                const currentImg = localStorage.getItem('img_cache_' + cartaCorrenteSelezionata.toLowerCase());
+            dbMatches.push({
+                id: Date.now(),
+                deckId: currentDeck.id,
+                deckName: currentDeck.nome,
+                opp, res, pd,
+                testFeedback,
+                data: new Date().toLocaleDateString()
+            });
 
-                stampe.forEach(cardData => {
-                    let imgUrl = '';
-                    if (cardData.image_uris && cardData.image_uris.normal) {
-                        imgUrl = cardData.image_uris.normal;
-                    } else if (cardData.card_faces && cardData.card_faces[0].image_uris) {
-                        imgUrl = cardData.card_faces[0].image_uris.normal;
-                    }
+            localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+            chiudiModal('modalPartita');
+            renderPartite();
+            renderMatriceETesting();
+        }
 
-                    if (!imgUrl) return;
+        function renderMatriceETesting() {
+            const tbody = document.getElementById('matrixTbody');
+            tbody.innerHTML = '';
 
-                    const option = document.createElement('div');
-                    option.className = 'art-option' + (imgUrl === currentImg ? ' selected' : '');
-                    option.innerHTML = `
-                        <img src="${imgUrl}" alt="${cardData.set_name}">
-                        <div class="art-option-set">${cardData.set.toUpperCase()}</div>
-                    `;
+            const matches = dbMatches.filter(m => m.deckId == activeDeckId);
 
-                    option.onclick = () => selezionaNuovoArtwork(imgUrl, cardData);
-                    grid.appendChild(option);
+            if (matches.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted); padding:20px;">Nessuna partita registrata per questo mazzo.</td></tr>';
+            } else {
+                const stats = {};
+                matches.forEach(m => {
+                    const opp = m.opp.toUpperCase();
+                    if(!stats[opp]) stats[opp] = { w: 0, l: 0 };
+                    if(m.res === '2-0' || m.res === '2-1') stats[opp].w++;
+                    else stats[opp].l++;
                 });
 
-            } catch(e) {
-                console.error(e);
-                grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: var(--text-orange); padding: 10px; font-size:12px;">Impossibile recuperare altre edizioni.</div>';
+                Object.keys(stats).forEach(opp => {
+                    const w = stats[opp].w;
+                    const l = stats[opp].l;
+                    const tot = w + l;
+                    const wr = Math.round((w / tot) * 100);
+
+                    let classWr = 'matrix-cell-even';
+                    if (wr >= 55) classWr = 'matrix-cell-win';
+                    if (wr <= 44) classWr = 'matrix-cell-loss';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:left; font-weight:700; color:#fff;">${opp}</td>
+                        <td>${w}</td>
+                        <td>${l}</td>
+                        <td class="${classWr}">${wr}%</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             }
+
+            const currentDeck = db.find(d => d.id == activeDeckId);
+            const containerCompare = document.getElementById('boxConfrontoVersioni');
+            containerCompare.innerHTML = '';
+
+            if(!currentDeck) return;
+
+            const parentId = currentDeck.parentId || currentDeck.id;
+            const tutteLeVersioni = db.filter(d => d.id == parentId || d.parentId == parentId);
+
+            tutteLeVersioni.forEach(ver => {
+                const verMatches = dbMatches.filter(m => m.deckId == ver.id);
+                const tot = verMatches.length;
+                const wins = verMatches.filter(m => m.res === '2-0' || m.res === '2-1').length;
+                const wr = tot > 0 ? Math.round((wins / tot) * 100) : 0;
+
+                const card = document.createElement('div');
+                card.className = 'version-compare-card';
+                if(ver.id == activeDeckId) card.style.borderColor = 'var(--accent-lime)';
+
+                let diffText = '';
+                if(ver.testCardsIn && ver.testCardsIn.length) diffText += `<div class="diff-tag-in">+ IN: ${ver.testCardsIn.join(', ')}</div>`;
+                if(ver.testCardsOut && ver.testCardsOut.length) diffText += `<div class="diff-tag-out">- OUT: ${ver.testCardsOut.join(', ')}</div>`;
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; font-size:14px; color:#fff;">${ver.nome} ${ver.id == parentId ? '(MADRE)' : ''}</span>
+                        <span style="font-weight:700; color:var(--accent-lime); font-size:16px;">${wr}% WR (${tot} Match)</span>
+                    </div>
+                    ${diffText}
+                `;
+                containerCompare.appendChild(card);
+            });
         }
 
-        function selezionaNuovoArtwork(imgUrl, cardData) {
-            if (!cartaCorrenteSelezionata) return;
-
-            localStorage.setItem('img_cache_' + cartaCorrenteSelezionata.toLowerCase(), imgUrl);
-
-            if (cardData.card_faces && cardData.card_faces.length >= 2 && cardData.card_faces[1].image_uris) {
-                localStorage.setItem('img_cache_back_' + cartaCorrenteSelezionata.toLowerCase(), cardData.card_faces[1].image_uris.normal);
-                document.getElementById('btnFlipCard').style.display = 'block';
-            }
-
-            document.getElementById('mdlCardImg').src = imgUrl;
-            latoCorrenteModale = 'front';
-
-            document.getElementById('artPickerContainer').style.display = 'none';
-            renderUI();
-        }
-
+        /* --- RENDER GRIGLIA CARTE --- */
         function renderGridSection(mapCardObj, targetElementId, isSide) {
             const gridEl = document.getElementById(targetElementId);
             gridEl.innerHTML = '';
             let total = 0;
 
+            const currentDeck = db.find(d => d.id == activeDeckId);
             const cardEntries = Object.entries(mapCardObj || {});
 
             if (cardEntries.length === 0) {
@@ -870,6 +800,8 @@
             cardEntries.forEach(([nome, qta]) => {
                 total += qta;
                 const cacheImg = localStorage.getItem('img_cache_' + nome.toLowerCase());
+                
+                const isTestCard = currentDeck && currentDeck.testCardsIn && currentDeck.testCardsIn.some(tc => tc.toLowerCase().includes(nome.toLowerCase()));
 
                 const item = document.createElement('div');
                 item.className = 'visual-card-item';
@@ -877,6 +809,7 @@
                     <div class="visual-card-img-wrap" onclick="mostraDettaglioCarta('${nome.replace(/'/g, "\\'")}')">
                         ${cacheImg ? `<img src="${cacheImg}" alt="${nome}">` : '<div style="color:var(--text-muted); font-size:24px;">🎴</div>'}
                         <div class="visual-card-badge">${qta}x</div>
+                        ${isTestCard ? '<div class="test-tag-indicator">TEST</div>' : ''}
                     </div>
                     <div class="visual-card-footer">
                         <div class="visual-card-name" title="${nome}">${nome}</div>
@@ -900,13 +833,18 @@
             activeDeckId = currentDeck.id;
             localStorage.setItem('active_deck_id', activeDeckId);
 
-            const priorita = currentDeck.priorita || 'Media';
-            document.getElementById('btnPriorita').innerText = `⭐ Priorità: ${priorita}`;
-
             document.getElementById('hdrDeckBreadcrumb').innerText = currentDeck.nome;
             document.getElementById('hdrDeckTitle').innerText = currentDeck.nome;
             document.getElementById('lblActiveDeckName').innerText = currentDeck.nome;
-            document.getElementById('lblActiveDeckVersion').innerText = `Aggiornato il ${currentDeck.data || "Oggi"} · Priorità: ${priorita}`;
+            
+            const badgeEl = document.getElementById('lblTestBadge');
+            if (currentDeck.isTestVersion) {
+                badgeEl.innerHTML = '<span class="badge-test">TEST VERSION</span>';
+            } else {
+                badgeEl.innerHTML = '';
+            }
+
+            document.getElementById('lblActiveDeckVersion').innerText = `Aggiornato il ${currentDeck.data || "Oggi"}`;
 
             const featuredCard = currentDeck.featuredCard || Object.keys(currentDeck.carte || {})[0];
             if (featuredCard) {
@@ -923,86 +861,180 @@
             document.getElementById('lblTotalSideCards').innerText = sideTotal + " carte";
         }
 
-        function mostraDettaglioCarta(nomeCarta) {
+        /* --- AUTOCOMPLETE & API --- */
+        function gestisciAutocomplete(valore, isSide) {
+            clearTimeout(autocompleteTimer);
+            const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
+            const dropdown = document.getElementById(dropdownId);
+            const query = valore.trim();
+
+            if (query.length < 2) {
+                dropdown.classList.remove('show');
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            autocompleteTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(query)}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const nomiCarte = data.data || [];
+
+                    if (nomiCarte.length === 0) { dropdown.classList.remove('show'); return; }
+
+                    dropdown.innerHTML = '';
+                    dropdown.classList.add('show');
+
+                    for (let nome of nomiCarte.slice(0, 5)) {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        const cacheImg = localStorage.getItem('img_cache_' + nome.toLowerCase());
+                        item.innerHTML = `<div class="autocomplete-thumb">${cacheImg ? `<img src="${cacheImg}">` : '🎴'}</div><div class="autocomplete-name">${nome}</div>`;
+                        item.onclick = () => {
+                            document.getElementById(isSide ? 'quickAddSideName' : 'quickAddName').value = nome;
+                            dropdown.classList.remove('show');
+                            aggiungiCartaRapida(isSide);
+                        };
+                        dropdown.appendChild(item);
+                    }
+                } catch (e) { console.error("Errore autocomplete:", e); }
+            }, 250);
+        }
+
+        async function aggiungiCartaRapida(isSide = false) {
+            const inputNameId = isSide ? 'quickAddSideName' : 'quickAddName';
+            const inputQtaId = isSide ? 'quickAddSideQta' : 'quickAddQta';
             const currentDeck = db.find(d => d.id == activeDeckId);
             if (!currentDeck) return;
 
-            cartaCorrenteSelezionata = nomeCarta;
-            latoCorrenteModale = 'front';
+            const qtaInput = parseInt(document.getElementById(inputQtaId).value) || 1;
+            const nomeInput = document.getElementById(inputNameId).value.trim();
+            if (!nomeInput) return;
 
-            document.getElementById('artPickerContainer').style.display = 'none';
+            const targetMap = isSide ? (currentDeck.sideboard = currentDeck.sideboard || {}) : (currentDeck.carte = currentDeck.carte || {});
+            targetMap[nomeInput] = (targetMap[nomeInput] || 0) + qtaInput;
 
-            const qtaMain = (currentDeck.carte || {})[nomeCarta] || 0;
-            const qtaSide = (currentDeck.sideboard || {})[nomeCarta] || 0;
+            document.getElementById(inputNameId).value = '';
+            document.getElementById(inputQtaId).value = '1';
 
-            document.getElementById('mdlCardTitle').innerText = nomeCarta;
-            document.getElementById('mdlCardDeck').innerText = currentDeck.nome;
-            document.getElementById('mdlCardQtyDisplay').innerText = (qtaMain || qtaSide) + 'x';
-            
-            const cacheFront = localStorage.getItem('img_cache_' + nomeCarta.toLowerCase());
-            const cacheBack = localStorage.getItem('img_cache_back_' + nomeCarta.toLowerCase());
-
-            const imgElement = document.getElementById('mdlCardImg');
-            imgElement.src = cacheFront || '';
-
-            const btnFlip = document.getElementById('btnFlipCard');
-            if (cacheBack) {
-                btnFlip.style.display = 'block';
-            } else {
-                btnFlip.style.display = 'none';
-            }
-
-            document.getElementById('modalDetailCard').style.display = 'flex';
+            localStorage.setItem('pauper_decks', JSON.stringify(db));
+            renderUI();
+            await scaricaImmagini([nomeInput]);
+            renderUI();
         }
 
-        function giraCartaModal() {
-            if (!cartaCorrenteSelezionata) return;
+        async function modificaQuantita(nomeCarta, delta, isSide, event) {
+            if (event) event.stopPropagation();
+            const currentDeck = db.find(d => d.id == activeDeckId);
+            if (!currentDeck) return;
 
-            const cacheFront = localStorage.getItem('img_cache_' + cartaCorrenteSelezionata.toLowerCase());
-            const cacheBack = localStorage.getItem('img_cache_back_' + cartaCorrenteSelezionata.toLowerCase());
-            const imgElement = document.getElementById('mdlCardImg');
+            const mappaCarte = isSide ? (currentDeck.sideboard || {}) : (currentDeck.carte || {});
+            let nuovaQta = (mappaCarte[nomeCarta] || 0) + delta;
 
-            if (!cacheBack) return;
-
-            if (latoCorrenteModale === 'front') {
-                imgElement.src = cacheBack;
-                latoCorrenteModale = 'back';
+            if (nuovaQta <= 0) {
+                if (confirm(`Vuoi rimuovere "${nomeCarta}"?`)) delete mappaCarte[nomeCarta];
             } else {
-                imgElement.src = cacheFront;
-                latoCorrenteModale = 'front';
+                mappaCarte[nomeCarta] = nuovaQta;
+            }
+
+            localStorage.setItem('pauper_decks', JSON.stringify(db));
+            renderUI();
+        }
+
+        function renderPartite() {
+            const container = document.getElementById('historicoPartite');
+            container.innerHTML = '';
+            const matches = dbMatches.filter(m => m.deckId == activeDeckId);
+
+            if (matches.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0;">Nessuna partita registrata per questa versione.</p>';
+                return;
+            }
+
+            matches.reverse().forEach(m => {
+                const isWin = m.res === '2-0' || m.res === '2-1';
+                let feedbackText = '';
+                if(m.testFeedback && m.testFeedback.length) {
+                    feedbackText = `<div style="font-size:11px; color:var(--text-muted); margin-top:4px;">` + 
+                        m.testFeedback.map(f => `🧪 ${f.card}: viste ${f.seen} (${f.rating})`).join('<br>') + `</div>`;
+                }
+
+                container.innerHTML += `
+                    <div style="background:var(--bg-card); padding:12px; border-radius:12px; margin-top:8px; border:1px solid var(--border-color);">
+                        <div style="font-weight:700; color:${isWin ? 'var(--accent-lime)' : 'var(--text-orange)'}">${m.res} vs ${m.opp}</div>
+                        <div style="font-size:11px; color:var(--text-muted);">${m.pd} · ${m.data}</div>
+                        ${feedbackText}
+                    </div>
+                `;
+            });
+        }
+
+        async function scaricaImmagini(carte) {
+            for (let c of carte) {
+                const keyFront = 'img_cache_' + c.toLowerCase();
+                if (!localStorage.getItem(keyFront)) {
+                    try {
+                        const cleanName = c.split('//')[0].trim();
+                        const res = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cleanName)}`);
+                        if (!res.ok) continue;
+                        const data = await res.json();
+                        
+                        let imgUrl = '';
+                        if (data.image_uris && data.image_uris.normal) {
+                            imgUrl = data.image_uris.normal;
+                        } else if (data.card_faces && data.card_faces[0].image_uris) {
+                            imgUrl = data.card_faces[0].image_uris.normal;
+                            const faces = data.card_faces.map(f => f.image_uris.normal);
+                            localStorage.setItem('faces_cache_' + c.toLowerCase(), JSON.stringify(faces));
+                        }
+
+                        if (imgUrl) localStorage.setItem(keyFront, imgUrl);
+                    } catch (e) {}
+                }
             }
         }
+
+        function apriModalNuovoMazzo() { document.getElementById('modalNuovoMazzo').style.display = 'flex'; }
+        
+        function creaNuovoMazzoIniziale() {
+            const nome = document.getElementById('inputNewDeckName').value.trim();
+            if(!nome) { alert("Inserisci un nome!"); return; }
+
+            const newDeck = {
+                id: Date.now(),
+                nome,
+                carte: {},
+                sideboard: {},
+                data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+            };
+
+            db.push(newDeck);
+            activeDeckId = newDeck.id;
+            localStorage.setItem('pauper_decks', JSON.stringify(db));
+            localStorage.setItem('active_deck_id', activeDeckId);
+
+            chiudiModal('modalNuovoMazzo');
+            renderUI();
+        }
+
+        function apriModalMazzi() { renderElencoMazziModale(); document.getElementById('modalMazziList').style.display = 'flex'; }
+        function apriModalSettings() { document.getElementById('modalSettings').style.display = 'flex'; }
+        function chiudiModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function renderElencoMazziModale() {
             const box = document.getElementById('boxElencoMazziModale');
             box.innerHTML = '';
 
-            if (db.length === 0) {
-                box.innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0;">Nessun mazzo salvato nell\'archivio.</p>';
-                return;
-            }
-
             db.forEach(deck => {
-                const featuredCard = deck.featuredCard || Object.keys(deck.carte || {})[0];
-                const cacheImg = featuredCard ? localStorage.getItem('img_cache_' + featuredCard.toLowerCase()) : null;
-
                 const cardRow = document.createElement('div');
-                cardRow.className = 'card-item-row';
-                cardRow.style.marginBottom = '10px';
+                cardRow.style.cssText = 'background:var(--bg-card-subtle); padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;';
                 cardRow.innerHTML = `
-                    <div class="card-item-left" onclick="apriMazzoPerId(${deck.id})">
-                        <div class="card-thumb" style="width:48px; height:48px;">
-                            ${cacheImg ? `<img src="${cacheImg}">` : '🎴'}
-                        </div>
-                        <div>
-                            <div class="card-name">${deck.nome}</div>
-                            <div class="card-subtext">Priorità: ${deck.priorita || 'Media'}</div>
-                        </div>
+                    <div onclick="apriMazzoPerId(${deck.id})" style="cursor:pointer;">
+                        <div style="font-weight:700; color:#fff;">${deck.nome} ${deck.isTestVersion ? '🧪' : ''}</div>
+                        <div style="font-size:11px; color:var(--text-muted);">${Object.keys(deck.carte||{}).length} carte</div>
                     </div>
-                    <div class="card-actions">
-                        <button class="btn-lime" style="width:auto; padding:6px 12px; margin:0;" onclick="apriMazzoPerId(${deck.id})">Apri</button>
-                        <button class="btn-star" style="color:var(--text-orange); width:auto; padding:8px 10px; margin:0;" title="Elimina mazzo" onclick="eliminaMazzoPerId(${deck.id}, event)">✕</button>
-                    </div>
+                    <button class="btn-lime" style="width:auto; padding:6px 12px; margin:0;" onclick="apriMazzoPerId(${deck.id})">Apri</button>
                 `;
                 box.appendChild(cardRow);
             });
@@ -1015,123 +1047,13 @@
             chiudiModal('modalMazziList');
         }
 
-        function eliminaMazzoPerId(id, e) {
-            e.stopPropagation();
-            const targetDeck = db.find(d => d.id == id);
-            if (!targetDeck) return;
-
-            if (!confirm(`Vuoi davvero eliminare il mazzo "${targetDeck.nome}"?`)) return;
-
-            db = db.filter(d => d.id != id);
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-
-            if (db.length > 0) {
-                activeDeckId = db[db.length - 1].id;
-                localStorage.setItem('active_deck_id', activeDeckId);
-            } else {
-                activeDeckId = null;
-                localStorage.removeItem('active_deck_id');
-            }
-
-            renderElencoMazziModale();
+        function pulisciCacheImmagini() {
+            Object.keys(localStorage).forEach(k => { 
+                if(k.startsWith('img_cache_') || k.startsWith('faces_cache_')) localStorage.removeItem(k); 
+            });
+            alert("Cache svuotata!");
             renderUI();
         }
-
-        function salvaMatchUI() {
-            const currentDeck = db.find(d => d.id == activeDeckId);
-            if (!currentDeck) return;
-
-            const opp = document.getElementById('matchOpponent').value.trim();
-            const res = document.getElementById('matchResult').value;
-            const pd = document.getElementById('matchPlayDraw').value;
-
-            if(!opp) { alert("Inserisci avversario!"); return; }
-
-            dbMatches.push({
-                id: Date.now(),
-                deckId: currentDeck.id,
-                deckName: currentDeck.nome,
-                opp, res, pd,
-                data: new Date().toLocaleDateString()
-            });
-
-            localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
-            chiudiModal('modalPartita');
-            renderPartite();
-        }
-
-        function renderPartite() {
-            const container = document.getElementById('historicoPartite');
-            container.innerHTML = '';
-            const matches = dbMatches.filter(m => m.deckId == activeDeckId);
-
-            if (matches.length === 0) {
-                container.innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0;">Nessuna partita registrata per questo mazzo.</p>';
-                return;
-            }
-
-            matches.reverse().forEach(m => {
-                const isWin = m.res === '2-0' || m.res === '2-1';
-                container.innerHTML += `
-                    <div class="card-item-row" style="margin-top:8px;">
-                        <div>
-                            <div class="card-name" style="color:${isWin ? 'var(--accent-lime)' : 'var(--text-orange)'}">${m.res} vs ${m.opp}</div>
-                            <div class="card-subtext">${m.pd} · ${m.data}</div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function renderStats() {
-            const matches = dbMatches.filter(m => m.deckId == activeDeckId);
-            const total = matches.length;
-            const wins = matches.filter(m => m.res === '2-0' || m.res === '2-1').length;
-            const wr = total > 0 ? Math.round((wins / total) * 100) : 0;
-
-            document.getElementById('stTotalMatches').innerText = total;
-            document.getElementById('stWinRate').innerText = wr + '%';
-        }
-
-        async function scaricaImmagini(carte) {
-            for (let c of carte) {
-                const nomePulito = c.split('//')[0].trim();
-                const keyFront = 'img_cache_' + c.toLowerCase();
-                const keyBack = 'img_cache_back_' + c.toLowerCase();
-
-                if (!localStorage.getItem(keyFront)) {
-                    try {
-                        const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(nomePulito)}`);
-                        if (!res.ok) continue;
-
-                        const data = await res.json();
-
-                        if (data.image_uris && data.image_uris.normal) {
-                            localStorage.setItem(keyFront, data.image_uris.normal);
-                        }
-
-                        if (data.card_faces && data.card_faces.length >= 2) {
-                            if (!localStorage.getItem(keyFront) && data.card_faces[0].image_uris) {
-                                localStorage.setItem(keyFront, data.card_faces[0].image_uris.normal);
-                            }
-                            if (data.card_faces[1].image_uris) {
-                                localStorage.setItem(keyBack, data.card_faces[1].image_uris.normal);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Impossibile caricare l'immagine per:", c, e);
-                    }
-                }
-            }
-        }
-
-        document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                setTimeout(() => {
-                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
-            }
-        });
 
         renderUI();
     </script>
