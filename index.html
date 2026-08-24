@@ -270,7 +270,7 @@
         </button>
     </div>
 
-    <!-- MODAL: DETTAGLIO CARTA (WITH ARTWORK PICKER & FLIP) -->
+    <!-- MODAL: DETTAGLIO CARTA -->
     <div class="modal-overlay" id="modalDetailCard">
         <div class="modal-card">
             <div class="modal-close" onclick="chiudiModal('modalDetailCard')">✕</div>
@@ -281,10 +281,8 @@
                 <img id="mdlCardImg" src="" style="max-width:100%; height:auto; max-height:40vh; object-fit:contain; border-radius:8px;">
             </div>
 
-            <!-- TASTO FLIP BIFACCIALE -->
             <button class="btn-outline" id="btnFlipCard" style="display:none; width:100%; margin-bottom:8px; border-color:var(--accent-lime); color:var(--accent-lime);" onclick="ruotaCartaBifacciale()">🔄 Gira Carta (Lato B)</button>
 
-            <!-- CONTENITORE ARTWORKS ALTERNATIVE -->
             <div id="artworksContainer" style="display:none;">
                 <label>SELEZIONA ARTWORK / EDIZIONE</label>
                 <div id="artworksGrid" class="art-picker-grid"></div>
@@ -443,7 +441,6 @@
                 await forzaRiscarticaImmagineCartaCorrente();
             }
 
-            // Controlla se la carta ha doppio fronte
             const facesCache = localStorage.getItem('faces_cache_' + nomeCarta.toLowerCase());
             if(facesCache) {
                 cardFacesCorrenti = JSON.parse(facesCache);
@@ -523,7 +520,6 @@
 
             try {
                 const cleanName = cartaCorrenteSelezionata.split('//')[0].trim();
-                // Utilizzo della sintassi esatta !"" per evitare risultati non pertinenti (es. Snuff Out)
                 const res = await fetch(`https://api.scryfall.com/cards/search?q=%21"${encodeURIComponent(cleanName)}"&unique=prints`);
                 
                 if (!res.ok) throw new Error();
@@ -828,7 +824,20 @@
 
         function renderUI() {
             const currentDeck = db.find(d => d.id == activeDeckId) || db[db.length - 1];
-            if (!currentDeck) return;
+
+            if (!currentDeck) {
+                document.getElementById('hdrDeckBreadcrumb').innerText = "Nessun Mazzo";
+                document.getElementById('hdrDeckTitle').innerText = "Pauper Lab";
+                document.getElementById('lblActiveDeckName').innerText = "Nessun Mazzo";
+                document.getElementById('lblTestBadge').innerHTML = '';
+                document.getElementById('lblActiveDeckVersion').innerText = "Crea un nuovo mazzo per iniziare";
+                document.getElementById('deckCover').innerHTML = '🎴';
+                document.getElementById('mainboardCardGrid').innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0; grid-column: span 2;">Nessun mazzo selezionato.</p>';
+                document.getElementById('sideboardCardGrid').innerHTML = '';
+                document.getElementById('lblTotalCards').innerText = "0 carte";
+                document.getElementById('lblTotalSideCards').innerText = "0 carte";
+                return;
+            }
 
             activeDeckId = currentDeck.id;
             localStorage.setItem('active_deck_id', activeDeckId);
@@ -861,7 +870,7 @@
             document.getElementById('lblTotalSideCards').innerText = sideTotal + " carte";
         }
 
-        /* --- AUTOCOMPLETE & API --- */
+        /* --- AUTOCOMPLETE CON MINI-IMMAGINI IN TEMPO REALE --- */
         function gestisciAutocomplete(valore, isSide) {
             clearTimeout(autocompleteTimer);
             const dropdownId = isSide ? 'autocompleteDropdownSide' : 'autocompleteDropdownMain';
@@ -876,21 +885,37 @@
 
             autocompleteTimer = setTimeout(async () => {
                 try {
-                    const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(query)}`);
+                    // Scryfall API per ricerca con anteprime visive
+                    const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&unique=cards`);
                     if (!res.ok) return;
                     const data = await res.json();
-                    const nomiCarte = data.data || [];
+                    const carteTrovate = data.data || [];
 
-                    if (nomiCarte.length === 0) { dropdown.classList.remove('show'); return; }
+                    if (carteTrovate.length === 0) { dropdown.classList.remove('show'); return; }
 
                     dropdown.innerHTML = '';
                     dropdown.classList.add('show');
 
-                    for (let nome of nomiCarte.slice(0, 5)) {
+                    for (let card of carteTrovate.slice(0, 5)) {
+                        const nome = card.name;
+                        
+                        // Cerca l'anteprima dell'immagine
+                        let thumbUrl = '';
+                        if (card.image_uris && card.image_uris.art_crop) {
+                            thumbUrl = card.image_uris.art_crop;
+                        } else if (card.card_faces && card.card_faces[0].image_uris) {
+                            thumbUrl = card.card_faces[0].image_uris.art_crop;
+                        }
+
                         const item = document.createElement('div');
                         item.className = 'autocomplete-item';
-                        const cacheImg = localStorage.getItem('img_cache_' + nome.toLowerCase());
-                        item.innerHTML = `<div class="autocomplete-thumb">${cacheImg ? `<img src="${cacheImg}">` : '🎴'}</div><div class="autocomplete-name">${nome}</div>`;
+                        item.innerHTML = `
+                            <div class="autocomplete-thumb">
+                                ${thumbUrl ? `<img src="${thumbUrl}" alt="">` : '🎴'}
+                            </div>
+                            <div class="autocomplete-name">${nome}</div>
+                        `;
+                        
                         item.onclick = () => {
                             document.getElementById(isSide ? 'quickAddSideName' : 'quickAddName').value = nome;
                             dropdown.classList.remove('show');
@@ -1022,22 +1047,73 @@
         function apriModalSettings() { document.getElementById('modalSettings').style.display = 'flex'; }
         function chiudiModal(id) { document.getElementById(id).style.display = 'none'; }
 
+        /* --- GESTIONE ELENCO MAZZI ED ELIMINAZIONE CASCATA --- */
         function renderElencoMazziModale() {
             const box = document.getElementById('boxElencoMazziModale');
             box.innerHTML = '';
 
+            if (db.length === 0) {
+                box.innerHTML = '<p style="color:var(--text-muted); font-size:12px; text-align:center;">Nessun mazzo presente.</p>';
+                return;
+            }
+
             db.forEach(deck => {
                 const cardRow = document.createElement('div');
-                cardRow.style.cssText = 'background:var(--bg-card-subtle); padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;';
+                cardRow.style.cssText = 'background:var(--bg-card-subtle); padding:10px 12px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);';
+                
                 cardRow.innerHTML = `
-                    <div onclick="apriMazzoPerId(${deck.id})" style="cursor:pointer;">
-                        <div style="font-weight:700; color:#fff;">${deck.nome} ${deck.isTestVersion ? '🧪' : ''}</div>
-                        <div style="font-size:11px; color:var(--text-muted);">${Object.keys(deck.carte||{}).length} carte</div>
+                    <div onclick="apriMazzoPerId(${deck.id})" style="cursor:pointer; flex:1; margin-right:10px;">
+                        <div style="font-weight:700; color:#fff; font-size:13px;">
+                            ${deck.nome} ${deck.isTestVersion ? '🧪' : ''}
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted);">
+                            ${Object.keys(deck.carte || {}).length} carte · ${deck.data || ''}
+                        </div>
                     </div>
-                    <button class="btn-lime" style="width:auto; padding:6px 12px; margin:0;" onclick="apriMazzoPerId(${deck.id})">Apri</button>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button class="btn-lime" style="width:auto; padding:6px 12px; margin:0; font-size:12px;" onclick="apriMazzoPerId(${deck.id})">Apri</button>
+                        <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); padding:6px 10px; margin:0; font-size:12px;" onclick="eliminaMazzo(${deck.id}, event)">🗑️</button>
+                    </div>
                 `;
                 box.appendChild(cardRow);
             });
+        }
+
+        function eliminaMazzo(deckId, event) {
+            if (event) event.stopPropagation();
+
+            const targetDeck = db.find(d => d.id == deckId);
+            if (!targetDeck) return;
+
+            const versioniDerivate = db.filter(d => d.parentId == deckId);
+            let messaggioConferma = `Sei sicuro di voler eliminare "${targetDeck.nome}"?`;
+
+            if (versioniDerivate.length > 0) {
+                messaggioConferma += `\n\n⚠️ Verranno eliminate anche le sue ${versioniDerivate.length} versioni Test derivate e tutti i relativi dati/statistiche.`;
+            }
+
+            if (!confirm(messaggioConferma)) return;
+
+            const deckIdsToRemove = [deckId, ...versioniDerivate.map(d => d.id)];
+
+            db = db.filter(d => !deckIdsToRemove.includes(d.id));
+            localStorage.setItem('pauper_decks', JSON.stringify(db));
+
+            dbMatches = dbMatches.filter(m => !deckIdsToRemove.includes(m.deckId));
+            localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+
+            if (deckIdsToRemove.includes(parseInt(activeDeckId))) {
+                if (db.length > 0) {
+                    activeDeckId = db[0].id;
+                    localStorage.setItem('active_deck_id', activeDeckId);
+                } else {
+                    activeDeckId = null;
+                    localStorage.removeItem('active_deck_id');
+                }
+            }
+
+            renderElencoMazziModale();
+            renderUI();
         }
 
         function apriMazzoPerId(id) {
