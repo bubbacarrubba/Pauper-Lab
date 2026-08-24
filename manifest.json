@@ -1,0 +1,15 @@
+{
+  "name": "Pauper Lab",
+  "short_name": "PauperLab",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0f0e",
+  "theme_color": "#ccff00",
+  "icons": [
+    {
+      "src": "icona.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
