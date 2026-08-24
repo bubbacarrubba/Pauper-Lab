@@ -141,7 +141,6 @@
             <div class="deck-breadcrumb">LAB / <span id="hdrDeckBreadcrumb">Nessun Mazzo</span></div>
             <div class="deck-title" id="hdrDeckTitle">Pauper Lab</div>
         </div>
-        <!-- ORA IL PULSANTE CON 3 LINEE APRE APPOSITO MODALE IMPOSTAZIONI -->
         <button class="icon-btn" onclick="apriModalSettings()">≡</button>
     </div>
 
@@ -175,7 +174,6 @@
 
     <!-- PAGE: LISTA CARTE -->
     <div id="subpage-lista" class="page active">
-        <!-- AGGIUNTA RAPIDA CARTA SINGOLA CON PREDIZIONI VISIVE -->
         <div class="section-label" style="margin-top:16px;">AGGIUNGI CARTA RAPIDA</div>
         <div class="quick-add-wrapper">
             <div class="quick-add-box">
@@ -183,7 +181,6 @@
                 <input type="text" id="quickAddName" placeholder="Nome carta (es. Tithing...)" style="margin:0; flex:1;" autocomplete="off" oninput="gestisciAutocomplete(this.value)" onkeydown="if(event.key==='Enter') aggiungiCartaRapida()">
                 <button class="btn-lime" style="width: auto; margin:0; padding: 12px 16px;" onclick="aggiungiCartaRapida()">+</button>
             </div>
-            <!-- MENU TENDINA CON MINI PREVIEW -->
             <div id="autocompleteDropdown" class="autocomplete-results"></div>
         </div>
 
@@ -223,7 +220,7 @@
         </div>
     </div>
 
-    <!-- BOTTOM NAVBAR (RIPRISTINATA SEZIONE TEST 🧪) -->
+    <!-- BOTTOM NAVBAR -->
     <div class="bottom-nav">
         <button class="nav-item active" id="navHome" onclick="switchSubTab('lista', document.getElementById('tab-lista')); setNavActive(this);">
             <span class="icon">🏠</span>
@@ -289,7 +286,6 @@
 
             <button class="btn-outline" id="btnFlipCard" style="display:none; margin-bottom:8px;" onclick="giraCartaModal()">🔄 Gira Carta</button>
             
-            <!-- PULSANTE CAMBIO ARTWORK -->
             <button class="btn-outline" id="btnToggleArtPicker" onclick="caricaStampeCarta()">🎨 Cambia Artwork / Edizione</button>
             <div id="artPickerContainer" style="display:none;">
                 <label>SELEZIONA EDIZIONE / ARTWORK</label>
@@ -382,7 +378,7 @@
         </div>
     </div>
 
-    <!-- MODAL: IMPOSTAZIONI / OPZIONI (COLLEGATO AL TASTO ≡ IN ALTO) -->
+    <!-- MODAL: IMPOSTAZIONI / OPZIONI -->
     <div class="modal-overlay" id="modalSettings">
         <div class="modal-card">
             <div class="modal-close" onclick="chiudiModal('modalSettings')">✕</div>
@@ -397,6 +393,15 @@
     </div>
 
     <script>
+        // Registrazione Service Worker per correggere l'avviso PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/Pauper-Lab/sw.js')
+                    .then((reg) => console.log('SW registrato!', reg))
+                    .catch((err) => console.log('SW fallito', err));
+            });
+        }
+
         let db = JSON.parse(localStorage.getItem('pauper_decks')) || [];
         let dbMatches = JSON.parse(localStorage.getItem('pauper_matches')) || [];
         let activeDeckId = localStorage.getItem('active_deck_id') || null;
@@ -542,7 +547,6 @@
             renderUI();
         }
 
-        /* AUTOCOMPLETE CON PREVIEW VISIVA SCRYFALL */
         function gestisciAutocomplete(valore) {
             clearTimeout(autocompleteTimer);
             const dropdown = document.getElementById('autocompleteDropdown');
@@ -614,7 +618,6 @@
             }
         });
 
-        /* AGGIUNTA RAPIDA CARTA SINGOLA */
         async function aggiungiCartaRapida() {
             document.getElementById('autocompleteDropdown').classList.remove('show');
             const currentDeck = db.find(d => d.id == activeDeckId);
@@ -703,7 +706,6 @@
             }, 1500);
         }
 
-        /* FUNZIONALITÀ CAMBIO ARTWORK / EDIZIONI */
         async function caricaStampeCarta() {
             const container = document.getElementById('artPickerContainer');
             const grid = document.getElementById('artPickerGrid');
