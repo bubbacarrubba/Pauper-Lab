@@ -11,6 +11,8 @@
     
     <!-- LIBRERIA PER ESPORTAZIONE PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- SUPABASE CLIENT -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -38,6 +40,11 @@
         .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
         .deck-breadcrumb { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-lime); font-weight: 600; margin-bottom: 2px; }
         .deck-title { font-size: 20px; font-weight: 700; color: #fff; }
+
+        /* CLOUD STATUS BADGE */
+        .cloud-badge { font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 20px; background: var(--bg-card-subtle); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .cloud-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #8e948f; }
+        .cloud-status-dot.online { background: #81c784; }
 
         /* MOTTO BOX */
         .motto-card { background: var(--bg-card); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-lime); border-radius: 12px; padding: 12px 16px; margin: 16px; font-style: italic; font-size: 13px; color: var(--text-muted); text-align: center; }
@@ -150,6 +157,10 @@
         <div style="text-align: center;">
             <div class="deck-breadcrumb">LAB / <span id="hdrDeckBreadcrumb">Nessun Mazzo</span></div>
             <div class="deck-title" id="hdrDeckTitle">Pauper Lab</div>
+        </div>
+        <div class="cloud-badge" onclick="apriModalAuth()">
+            <div class="cloud-status-dot" id="cloudDot"></div>
+            <span id="cloudLabel">Offline</span>
         </div>
         <button class="icon-btn" onclick="apriModalSettings()">≡</button>
     </div>
@@ -278,6 +289,34 @@
         </button>
     </div>
 
+    <!-- MODAL: AUTENTICAZIONE SUPABASE -->
+    <div class="modal-overlay" id="modalAuth">
+        <div class="modal-card">
+            <div class="modal-close" onclick="chiudiModal('modalAuth')">✕</div>
+            <div class="deck-breadcrumb">ACCOUNT CLOUD</div>
+            <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;" id="authModalTitle">Accedi a Supabase</h2>
+            
+            <div id="authLoggedInArea" style="display:none; text-align:center;">
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Connesso come:<br><strong id="authUserEmail" style="color:#fff;">email@test.com</strong></p>
+                <button class="btn-lime" style="margin-bottom:8px;" onclick="sincronizzaCloudCompleta()">🔄 Sincronizza Dati Adesso</button>
+                <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%;" onclick="logoutSupabase()">Disconnetti Account</button>
+            </div>
+
+            <div id="authFormArea">
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Accedi per salvare automaticamente i tuoi mazzi sul Cloud e sincronizzarli su tutti i tuoi dispositivi.</p>
+                
+                <label>EMAIL</label>
+                <input type="email" id="authEmail" placeholder="tua.email@esempio.com">
+
+                <label>PASSWORD</label>
+                <input type="password" id="authPassword" placeholder="••••••••">
+
+                <button class="btn-lime" onclick="loginSupabase()">Accedi</button>
+                <button class="btn-outline" style="width:100%;" onclick="registraSupabase()">Crea Nuovo Account</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: DETTAGLIO CARTA -->
     <div class="modal-overlay" id="modalDetailCard">
         <div class="modal-card">
@@ -400,6 +439,16 @@
     </div>
 
     <script>
+        /* === CONFIGURAZIONE SUPABASE === */
+        const SUPABASE_URL = 'https://axtziaulceskqgxoills.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dHppYXVsY2Vza3FneG9pbGxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NTI5MzAsImV4cCI6MjEwMzIyODkzMH0.xnvn_Weqti53lexYyb0jvRqj9eSXNIPVLRcpAMS-4M0';
+
+        let supabaseClient = null;
+        if (SUPABASE_URL !== 'INSERISCI_QUI_IL_TUO_PROJECT_URL' && typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        let currentUser = null;
         let db = JSON.parse(localStorage.getItem('pauper_decks')) || [];
         let dbMatches = JSON.parse(localStorage.getItem('pauper_matches')) || [];
         let activeDeckId = localStorage.getItem('active_deck_id') || null;
@@ -407,6 +456,137 @@
         let autocompleteTimer = null;
         let cardFacesCorrenti = [];
         let indexFaceCorrente = 0;
+
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        /* --- AUTENTICAZIONE E SINCRONIZZAZIONE CLOUD --- */
+        async function inizializzaAuthSupabase() {
+            if (!supabaseClient) return;
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            gestisciCambioStatoAuth(session ? session.user : null);
+
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                gestisciCambioStatoAuth(session ? session.user : null);
+            });
+        }
+
+        function gestisciCambioStatoAuth(user) {
+            currentUser = user;
+            const dot = document.getElementById('cloudDot');
+            const label = document.getElementById('cloudLabel');
+
+            if (user) {
+                dot.classList.add('online');
+                label.innerText = 'Online';
+                document.getElementById('authLoggedInArea').style.display = 'block';
+                document.getElementById('authFormArea').style.display = 'none';
+                document.getElementById('authUserEmail').innerText = user.email;
+                sincronizzaCloudCompleta();
+            } else {
+                dot.classList.remove('online');
+                label.innerText = 'Offline';
+                document.getElementById('authLoggedInArea').style.display = 'none';
+                document.getElementById('authFormArea').style.display = 'block';
+            }
+        }
+
+        async function loginSupabase() {
+            if (!supabaseClient) { alert("Configura prima Supabase inserendo URL e Key nel codice!"); return; }
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (!email || !password) { alert("Inserisci email e password!"); return; }
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) alert("Errore di accesso: " + error.message);
+            else chiudiModal('modalAuth');
+        }
+
+        async function registraSupabase() {
+            if (!supabaseClient) { alert("Configura prima Supabase inserendo URL e Key nel codice!"); return; }
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (!email || !password) { alert("Inserisci email e password!"); return; }
+
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) alert("Errore di registrazione: " + error.message);
+            else alert("Registrazione completata! Se richiesto, controlla la tua email per la conferma.");
+        }
+
+        async function logoutSupabase() {
+            if (supabaseClient) await supabaseClient.auth.signOut();
+            chiudiModal('modalAuth');
+        }
+
+        async function sincronizzaCloudCompleta() {
+            if (!supabaseClient || !currentUser) return;
+
+            // 1. Scarica Mazzi dal Cloud
+            const { data: cloudDecks } = await supabaseClient.from('pauper_decks').select('*');
+            if (cloudDecks && cloudDecks.length > 0) {
+                db = cloudDecks;
+                localStorage.setItem('pauper_decks', JSON.stringify(db));
+            } else if (db.length > 0) {
+                // Se il cloud è vuoto ma abbiamo dati locali, carichiamo i dati locali su Cloud
+                for (let d of db) {
+                    await salvamazzoCloud(d);
+                }
+            }
+
+            // 2. Scarica Partite dal Cloud
+            const { data: cloudMatches } = await supabaseClient.from('pauper_matches').select('*');
+            if (cloudMatches && cloudMatches.length > 0) {
+                dbMatches = cloudMatches;
+                localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+            } else if (dbMatches.length > 0) {
+                for (let m of dbMatches) {
+                    await salvaMatchCloud(m);
+                }
+            }
+
+            renderUI();
+        }
+
+        async function salvamazzoCloud(deck) {
+            if (!supabaseClient || !currentUser) return;
+            const row = {
+                id: deck.id,
+                user_id: currentUser.id,
+                nome: deck.nome,
+                carte: deck.carte || {},
+                sideboard: deck.sideboard || {},
+                testCardsIn: deck.testCardsIn || [],
+                testCardsOut: deck.testCardsOut || [],
+                featuredCard: deck.featuredCard || '',
+                isTestVersion: deck.isTestVersion || false,
+                parentId: deck.parentId || null,
+                data: deck.data || ''
+            };
+            await supabaseClient.from('pauper_decks').upsert(row);
+        }
+
+        async function eliminaMazzoCloud(deckId) {
+            if (!supabaseClient || !currentUser) return;
+            await supabaseClient.from('pauper_decks').delete().eq('id', deckId);
+        }
+
+        async function salvaMatchCloud(match) {
+            if (!supabaseClient || !currentUser) return;
+            const row = {
+                id: match.id,
+                user_id: currentUser.id,
+                deckId: match.deckId,
+                deckName: match.deckName,
+                opp: match.opp,
+                res: match.res,
+                pd: match.pd,
+                testFeedback: match.testFeedback || [],
+                data: match.data || ''
+            };
+            await supabaseClient.from('pauper_matches').upsert(row);
+        }
 
         /* CHIUSURA DROPDOWN CON CLICK FUORI DALL'INPUT */
         document.addEventListener('click', function(e) {
@@ -449,7 +629,6 @@
             const element = document.getElementById('pdfExportArea');
             const pdfHeader = document.getElementById('pdfHeaderTitle');
 
-            // Mostra temporaneamente l'intestazione per il PDF
             pdfHeader.innerText = `Pauper Lab - Matrice Matchup (${deckName})`;
             pdfHeader.style.display = 'block';
 
@@ -611,6 +790,7 @@
             if(!currentDeck || !cartaCorrenteSelezionata) return;
             currentDeck.featuredCard = cartaCorrenteSelezionata;
             localStorage.setItem('pauper_decks', JSON.stringify(db));
+            salvamazzoCloud(currentDeck);
             renderUI();
             chiudiModal('modalDetailCard');
         }
@@ -674,6 +854,7 @@
             localStorage.setItem('pauper_decks', JSON.stringify(db));
             localStorage.setItem('active_deck_id', activeDeckId);
 
+            salvamazzoCloud(newTestDeck);
             chiudiModal('modalForkTest');
             renderUI();
             alert("Nuova versione test creata e selezionata!");
@@ -736,16 +917,20 @@
                 });
             }
 
-            dbMatches.push({
+            const newMatch = {
                 id: Date.now(),
                 deckId: currentDeck.id,
                 deckName: currentDeck.nome,
                 opp, res, pd,
                 testFeedback,
                 data: new Date().toLocaleDateString()
-            });
+            };
+
+            dbMatches.push(newMatch);
 
             localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+            salvaMatchCloud(newMatch);
+
             chiudiModal('modalPartita');
             renderPartite();
             renderMatriceETesting();
@@ -994,6 +1179,7 @@
             document.getElementById(inputQtaId).value = '1';
 
             localStorage.setItem('pauper_decks', JSON.stringify(db));
+            salvamazzoCloud(currentDeck);
             renderUI();
             await scaricaImmagini([nomeInput]);
             renderUI();
@@ -1014,6 +1200,7 @@
             }
 
             localStorage.setItem('pauper_decks', JSON.stringify(db));
+            salvamazzoCloud(currentDeck);
             renderUI();
         }
 
@@ -1065,12 +1252,14 @@
                         }
 
                         if (imgUrl) localStorage.setItem(keyFront, imgUrl);
+                        await delay(100);
                     } catch (e) {}
                 }
             }
         }
 
         function apriModalNuovoMazzo() { document.getElementById('modalNuovoMazzo').style.display = 'flex'; }
+        function apriModalAuth() { document.getElementById('modalAuth').style.display = 'flex'; }
         
         function creaNuovoMazzoIniziale() {
             const nome = document.getElementById('inputNewDeckName').value.trim();
@@ -1089,6 +1278,7 @@
             localStorage.setItem('pauper_decks', JSON.stringify(db));
             localStorage.setItem('active_deck_id', activeDeckId);
 
+            salvamazzoCloud(newDeck);
             chiudiModal('modalNuovoMazzo');
             renderUI();
         }
@@ -1118,7 +1308,7 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (!imported.pauper_decks || !Array.isArray(imported.pauper_decks)) {
@@ -1147,6 +1337,8 @@
                         activeDeckId = db[0].id;
                         localStorage.setItem('active_deck_id', activeDeckId);
                     }
+
+                    if (currentUser) await sincronizzaCloudCompleta();
 
                     renderUI();
                     chiudiModal('modalSettings');
@@ -1190,7 +1382,7 @@
             });
         }
 
-        function eliminaMazzo(deckId, event) {
+        async function eliminaMazzo(deckId, event) {
             if (event) event.stopPropagation();
 
             const targetDeck = db.find(d => d.id == deckId);
@@ -1212,6 +1404,10 @@
 
             dbMatches = dbMatches.filter(m => !deckIdsToRemove.includes(m.deckId));
             localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+
+            for (let idToRemove of deckIdsToRemove) {
+                await eliminaMazzoCloud(idToRemove);
+            }
 
             if (deckIdsToRemove.includes(parseInt(activeDeckId))) {
                 if (db.length > 0) {
@@ -1242,6 +1438,8 @@
             renderUI();
         }
 
+        /* INIZIALIZZAZIONE */
+        inizializzaAuthSupabase();
         renderUI();
     </script>
 </body>
