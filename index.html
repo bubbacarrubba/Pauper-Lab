@@ -163,7 +163,7 @@
     </div>
 
     <!-- MAIN DECK INFO -->
-    <div class="deck-header-card">
+    <div class="deck-header-card" id="deckHeaderCard" onclick="gestisciClickHeaderDeck()">
         <div class="deck-cover-placeholder" id="deckCover">🎴</div>
         <div>
             <div style="display:flex; align-items:center;">
@@ -582,6 +582,14 @@
             document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
             switchSubTab('lista', document.getElementById('tab-lista'));
             setNavActive(document.getElementById('navHome'));
+        }
+
+        /* --- APERTURA MAZZO PRIMA VOLTA --- */
+        function gestisciClickHeaderDeck() {
+            const currentDeck = db.find(d => d.id == activeDeckId) || db[db.length - 1];
+            if (!currentDeck) {
+                apriModalNuovoMazzo();
+            }
         }
 
         /* --- CHIUSURA APP CON GESTIONE BACKUP --- */
@@ -1047,21 +1055,25 @@
 
         function renderUI() {
             const currentDeck = db.find(d => d.id == activeDeckId) || db[db.length - 1];
+            const headerCard = document.getElementById('deckHeaderCard');
 
             if (!currentDeck) {
                 document.getElementById('hdrDeckBreadcrumb').innerText = "Nessun Mazzo";
                 document.getElementById('hdrDeckTitle').innerText = "Pauper Lab";
                 document.getElementById('lblActiveDeckName').innerText = "Nessun Mazzo";
                 document.getElementById('lblTestBadge').innerHTML = '';
-                document.getElementById('lblActiveDeckVersion').innerText = "Crea un nuovo mazzo per iniziare";
-                document.getElementById('deckCover').innerHTML = '🎴';
-                document.getElementById('mainboardCardGrid').innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0; grid-column: span 2;">Nessun mazzo selezionato.</p>';
+                document.getElementById('lblActiveDeckVersion').innerText = "Clicca qui per creare il tuo primo mazzo!";
+                document.getElementById('deckCover').innerHTML = '➕';
+                headerCard.style.cursor = 'pointer';
+                
+                document.getElementById('mainboardCardGrid').innerHTML = '<p onclick="apriModalNuovoMazzo()" style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0; grid-column: span 2; cursor:pointer;">Nessun mazzo selezionato.<br><span style="color:var(--accent-lime); font-weight:600; text-decoration:underline;">Clicca qui per crearne uno!</span></p>';
                 document.getElementById('sideboardCardGrid').innerHTML = '';
                 document.getElementById('lblTotalCards').innerText = "0 carte";
                 document.getElementById('lblTotalSideCards').innerText = "0 carte";
                 return;
             }
 
+            headerCard.style.cursor = 'default';
             activeDeckId = currentDeck.id;
             salvaStatoCompleto();
 
