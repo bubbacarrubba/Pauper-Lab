@@ -11,8 +11,6 @@
     
     <!-- LIBRERIA PER ESPORTAZIONE PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- SUPABASE CLIENT -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -40,11 +38,6 @@
         .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
         .deck-breadcrumb { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-lime); font-weight: 600; margin-bottom: 2px; }
         .deck-title { font-size: 20px; font-weight: 700; color: #fff; }
-
-        /* CLOUD STATUS BADGE */
-        .cloud-badge { font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 20px; background: var(--bg-card-subtle); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px; cursor: pointer; }
-        .cloud-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #8e948f; }
-        .cloud-status-dot.online { background: #81c784; }
 
         /* MOTTO BOX */
         .motto-card { background: var(--bg-card); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-lime); border-radius: 12px; padding: 12px 16px; margin: 16px; font-style: italic; font-size: 13px; color: var(--text-muted); text-align: center; }
@@ -158,11 +151,10 @@
             <div class="deck-breadcrumb">LAB / <span id="hdrDeckBreadcrumb">Nessun Mazzo</span></div>
             <div class="deck-title" id="hdrDeckTitle">Pauper Lab</div>
         </div>
-        <div class="cloud-badge" onclick="apriModalAuth()">
-            <div class="cloud-status-dot" id="cloudDot"></div>
-            <span id="cloudLabel">Offline</span>
+        <div style="display: flex; gap: 8px;">
+            <button class="icon-btn" onclick="apriModalSettings()" title="Impostazioni">≡</button>
+            <button class="icon-btn" style="border-color: var(--text-orange); color: var(--text-orange);" onclick="apriModalExit()" title="Chiudi App">🚪</button>
         </div>
-        <button class="icon-btn" onclick="apriModalSettings()">≡</button>
     </div>
 
     <!-- MOTTO BOX -->
@@ -289,31 +281,19 @@
         </button>
     </div>
 
-    <!-- MODAL: AUTENTICAZIONE SUPABASE -->
-    <div class="modal-overlay" id="modalAuth">
+    <!-- MODAL: CHIUSURA APP CON BACKUP -->
+    <div class="modal-overlay" id="modalExitApp">
         <div class="modal-card">
-            <div class="modal-close" onclick="chiudiModal('modalAuth')">✕</div>
-            <div class="deck-breadcrumb">ACCOUNT CLOUD</div>
-            <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;" id="authModalTitle">Accedi a Supabase</h2>
+            <div class="modal-close" onclick="chiudiModal('modalExitApp')">✕</div>
+            <div class="deck-breadcrumb">CHIUSURA APP</div>
+            <h2 style="font-size:20px; font-weight:700; margin-bottom:12px;">Chiudi Pauper Lab</h2>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; line-height:1.4;">
+                I tuoi dati sono già salvati sul dispositivo nel database protetto. Vuoi scaricare un backup in formato <b>JSON</b> prima di uscire?
+            </p>
             
-            <div id="authLoggedInArea" style="display:none; text-align:center;">
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Connesso come:<br><strong id="authUserEmail" style="color:#fff;">email@test.com</strong></p>
-                <button class="btn-lime" style="margin-bottom:8px;" onclick="sincronizzaCloudCompleta()">🔄 Sincronizza Dati Adesso</button>
-                <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%;" onclick="logoutSupabase()">Disconnetti Account</button>
-            </div>
-
-            <div id="authFormArea">
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Accedi per salvare automaticamente i tuoi mazzi sul Cloud e sincronizzarli su tutti i tuoi dispositivi.</p>
-                
-                <label>EMAIL</label>
-                <input type="email" id="authEmail" placeholder="tua.email@esempio.com">
-
-                <label>PASSWORD</label>
-                <input type="password" id="authPassword" placeholder="••••••••">
-
-                <button class="btn-lime" onclick="loginSupabase()">Accedi</button>
-                <button class="btn-outline" style="width:100%;" onclick="registraSupabase()">Crea Nuovo Account</button>
-            </div>
+            <button class="btn-lime" onclick="eseguiUscita(true)">💾 Salva Backup JSON ed Esci</button>
+            <button class="btn-outline" style="border-color:var(--text-orange); color:var(--text-orange); width:100%; margin-bottom:8px;" onclick="eseguiUscita(false)">🚪 Esci Senza Salvare Backup</button>
+            <button class="btn-outline" style="width:100%;" onclick="chiudiModal('modalExitApp')">Annulla</button>
         </div>
     </div>
 
@@ -429,163 +409,145 @@
             <div class="deck-breadcrumb">OPZIONI</div>
             <h2 style="font-size:20px; font-weight:700; margin-bottom:16px;">Impostazioni</h2>
             
+            <div style="background:var(--bg-card-subtle); border:1px solid var(--accent-lime); padding:10px; border-radius:10px; margin-bottom:16px; font-size:11px; color:var(--accent-lime);">
+                🛡️ <b>Salvataggio Profondo Attivo:</b> I dati vengono salvati in automatico nel Database del dispositivo (IndexedDB) e protetti dalle pulizie di routine di Android.
+            </div>
+
             <button class="btn-outline" style="border-color:var(--accent-lime); color:var(--accent-lime); width:100%; margin-bottom:8px;" onclick="esportaDatiJSON()">📥 Esporta Backup (JSON)</button>
             <button class="btn-outline" style="border-color:var(--accent-lime); color:var(--accent-lime); width:100%; margin-bottom:12px;" onclick="document.getElementById('inputImportJSON').click()">📤 Importa Backup (JSON)</button>
             <input type="file" id="inputImportJSON" accept=".json" style="display:none;" onchange="importaDatiJSON(event)">
 
-            <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%;" onclick="pulisciCacheImmagini()">🧹 Pulisci Tutta la Cache Immagini</button>
-            <button class="btn-lime" style="margin-top:12px;" onclick="chiudiModal('modalSettings')">✓ Chiudi</button>
+            <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%; margin-bottom:12px;" onclick="pulisciCacheImmagini()">🧹 Pulisci Tutta la Cache Immagini</button>
+            <button class="btn-outline" style="color:var(--text-orange); border-color:var(--text-orange); width:100%; margin-bottom:12px;" onclick="chiudiModal('modalSettings'); apriModalExit();">🚪 Chiudi App con Backup</button>
+            <button class="btn-lime" onclick="chiudiModal('modalSettings')">✓ Chiudi Impostazioni</button>
         </div>
     </div>
 
     <script>
-        /* === CONFIGURAZIONE SUPABASE === */
-        const SUPABASE_URL = 'https://axtziaulceskqgxoills.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4dHppYXVsY2Vza3FneG9pbGxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NTI5MzAsImV4cCI6MjEwMzIyODkzMH0.xnvn_Weqti53lexYyb0jvRqj9eSXNIPVLRcpAMS-4M0';
-
-        let supabaseClient = null;
-        if (SUPABASE_URL !== 'INSERISCI_QUI_IL_TUO_PROJECT_URL' && typeof supabase !== 'undefined') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-
-        let currentUser = null;
-        let db = JSON.parse(localStorage.getItem('pauper_decks')) || [];
-        let dbMatches = JSON.parse(localStorage.getItem('pauper_matches')) || [];
-        let activeDeckId = localStorage.getItem('active_deck_id') || null;
+        let db = [];
+        let dbMatches = [];
+        let activeDeckId = null;
         let cartaCorrenteSelezionata = null;
         let autocompleteTimer = null;
         let cardFacesCorrenti = [];
         let indexFaceCorrente = 0;
 
-        const delay = ms => new Promise(res => setTimeout(res, ms));
+        /* --- MOTORE DI SALVATAGGIO PERSISTENTE (INDEXEDDB + STORAGE PERSISTENT) --- */
+        const DB_NAME = 'PauperLab_PersistentDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'app_state';
 
-        /* --- AUTENTICAZIONE E SINCRONIZZAZIONE CLOUD --- */
-        async function inizializzaAuthSupabase() {
-            if (!supabaseClient) return;
-
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            gestisciCambioStatoAuth(session ? session.user : null);
-
-            supabaseClient.auth.onAuthStateChange((_event, session) => {
-                gestisciCambioStatoAuth(session ? session.user : null);
+        function apriIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const dbInst = e.target.result;
+                    if (!dbInst.objectStoreNames.contains(STORE_NAME)) {
+                        dbInst.createObjectStore(STORE_NAME);
+                    }
+                };
+                req.onsuccess = (e) => resolve(e.target.result);
+                req.onerror = (e) => reject(e.target.error);
             });
         }
 
-        function gestisciCambioStatoAuth(user) {
-            currentUser = user;
-            const dot = document.getElementById('cloudDot');
-            const label = document.getElementById('cloudLabel');
+        async function salvaValoreIDB(chiave, valore) {
+            try {
+                const idb = await apriIndexedDB();
+                const tx = idb.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put(valore, chiave);
+            } catch (e) {
+                console.error("Errore scrittura IndexedDB:", e);
+            }
+        }
 
-            if (user) {
-                dot.classList.add('online');
-                label.innerText = 'Online';
-                document.getElementById('authLoggedInArea').style.display = 'block';
-                document.getElementById('authFormArea').style.display = 'none';
-                document.getElementById('authUserEmail').innerText = user.email;
-                sincronizzaCloudCompleta();
+        async function leggiValoreIDB(chiave) {
+            try {
+                const idb = await apriIndexedDB();
+                return new Promise((resolve) => {
+                    const tx = idb.transaction(STORE_NAME, 'readonly');
+                    const req = tx.objectStore(STORE_NAME).get(chiave);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function abilitaProtezioneMemoriaAndroid() {
+            if (navigator.storage && navigator.storage.persist) {
+                try {
+                    const isPersisted = await navigator.storage.persisted();
+                    if (!isPersisted) {
+                        await navigator.storage.persist();
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // SALVATAGGIO COMPLETO AUTOMATICO AD OGNI SINGOLA MODIFICA
+        async function salvaStatoCompleto() {
+            // 1. Memoria LocalStorage per velocità istantanea
+            localStorage.setItem('pauper_decks', JSON.stringify(db));
+            localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
+            if (activeDeckId) localStorage.setItem('active_deck_id', activeDeckId);
+
+            // 2. Database IndexedDB per protezione totale anti-pulizia Android
+            await salvaValoreIDB('pauper_decks', db);
+            await salvaValoreIDB('pauper_matches', dbMatches);
+            await salvaValoreIDB('active_deck_id', activeDeckId);
+
+            // Backup anche di tutte le immagini salvate in cache
+            const cacheObj = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.startsWith('img_cache_') || k.startsWith('faces_cache_'))) {
+                    cacheObj[k] = localStorage.getItem(k);
+                }
+            }
+            await salvaValoreIDB('images_cache_bundle', cacheObj);
+        }
+
+        // AVVIO ED AUTO-RIPRISTINO AUTOMATICO
+        async function inizializzaApp() {
+            await abilitaProtezioneMemoriaAndroid();
+
+            // Legge prima da LocalStorage
+            let lsDecks = JSON.parse(localStorage.getItem('pauper_decks')) || [];
+            let lsMatches = JSON.parse(localStorage.getItem('pauper_matches')) || [];
+            let lsActiveId = localStorage.getItem('active_deck_id') || null;
+
+            // Ripristina da IndexedDB se la cache/localstorage era stata cancellata
+            const idbDecks = await leggiValoreIDB('pauper_decks');
+            const idbMatches = await leggiValoreIDB('pauper_matches');
+            const idbActiveId = await leggiValoreIDB('active_deck_id');
+            const idbImages = await leggiValoreIDB('images_cache_bundle');
+
+            if (idbDecks && Array.isArray(idbDecks) && idbDecks.length >= lsDecks.length) {
+                db = idbDecks;
             } else {
-                dot.classList.remove('online');
-                label.innerText = 'Offline';
-                document.getElementById('authLoggedInArea').style.display = 'none';
-                document.getElementById('authFormArea').style.display = 'block';
-            }
-        }
-
-        async function loginSupabase() {
-            if (!supabaseClient) { alert("Configura prima Supabase inserendo URL e Key nel codice!"); return; }
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-
-            if (!email || !password) { alert("Inserisci email e password!"); return; }
-
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) alert("Errore di accesso: " + error.message);
-            else chiudiModal('modalAuth');
-        }
-
-        async function registraSupabase() {
-            if (!supabaseClient) { alert("Configura prima Supabase inserendo URL e Key nel codice!"); return; }
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-
-            if (!email || !password) { alert("Inserisci email e password!"); return; }
-
-            const { error } = await supabaseClient.auth.signUp({ email, password });
-            if (error) alert("Errore di registrazione: " + error.message);
-            else alert("Registrazione completata! Se richiesto, controlla la tua email per la conferma.");
-        }
-
-        async function logoutSupabase() {
-            if (supabaseClient) await supabaseClient.auth.signOut();
-            chiudiModal('modalAuth');
-        }
-
-        async function sincronizzaCloudCompleta() {
-            if (!supabaseClient || !currentUser) return;
-
-            // 1. Scarica Mazzi dal Cloud
-            const { data: cloudDecks } = await supabaseClient.from('pauper_decks').select('*');
-            if (cloudDecks && cloudDecks.length > 0) {
-                db = cloudDecks;
-                localStorage.setItem('pauper_decks', JSON.stringify(db));
-            } else if (db.length > 0) {
-                // Se il cloud è vuoto ma abbiamo dati locali, carichiamo i dati locali su Cloud
-                for (let d of db) {
-                    await salvamazzoCloud(d);
-                }
+                db = lsDecks;
             }
 
-            // 2. Scarica Partite dal Cloud
-            const { data: cloudMatches } = await supabaseClient.from('pauper_matches').select('*');
-            if (cloudMatches && cloudMatches.length > 0) {
-                dbMatches = cloudMatches;
-                localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
-            } else if (dbMatches.length > 0) {
-                for (let m of dbMatches) {
-                    await salvaMatchCloud(m);
-                }
+            if (idbMatches && Array.isArray(idbMatches) && idbMatches.length >= lsMatches.length) {
+                dbMatches = idbMatches;
+            } else {
+                dbMatches = lsMatches;
             }
 
+            activeDeckId = idbActiveId || lsActiveId;
+
+            if (idbImages && typeof idbImages === 'object') {
+                Object.keys(idbImages).forEach(k => {
+                    if (!localStorage.getItem(k)) {
+                        localStorage.setItem(k, idbImages[k]);
+                    }
+                });
+            }
+
+            await salvaStatoCompleto();
             renderUI();
-        }
-
-        async function salvamazzoCloud(deck) {
-            if (!supabaseClient || !currentUser) return;
-            const row = {
-                id: deck.id,
-                user_id: currentUser.id,
-                nome: deck.nome,
-                carte: deck.carte || {},
-                sideboard: deck.sideboard || {},
-                testCardsIn: deck.testCardsIn || [],
-                testCardsOut: deck.testCardsOut || [],
-                featuredCard: deck.featuredCard || '',
-                isTestVersion: deck.isTestVersion || false,
-                parentId: deck.parentId || null,
-                data: deck.data || ''
-            };
-            await supabaseClient.from('pauper_decks').upsert(row);
-        }
-
-        async function eliminaMazzoCloud(deckId) {
-            if (!supabaseClient || !currentUser) return;
-            await supabaseClient.from('pauper_decks').delete().eq('id', deckId);
-        }
-
-        async function salvaMatchCloud(match) {
-            if (!supabaseClient || !currentUser) return;
-            const row = {
-                id: match.id,
-                user_id: currentUser.id,
-                deckId: match.deckId,
-                deckName: match.deckName,
-                opp: match.opp,
-                res: match.res,
-                pd: match.pd,
-                testFeedback: match.testFeedback || [],
-                data: match.data || ''
-            };
-            await supabaseClient.from('pauper_matches').upsert(row);
         }
 
         /* CHIUSURA DROPDOWN CON CLICK FUORI DALL'INPUT */
@@ -620,6 +582,42 @@
             document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
             switchSubTab('lista', document.getElementById('tab-lista'));
             setNavActive(document.getElementById('navHome'));
+        }
+
+        /* --- CHIUSURA APP CON GESTIONE BACKUP --- */
+        function apriModalExit() {
+            document.getElementById('modalExitApp').style.display = 'flex';
+        }
+
+        async function eseguiUscita(conBackup) {
+            if (conBackup) {
+                esportaDatiJSON();
+            }
+
+            chiudiModal('modalExitApp');
+
+            setTimeout(() => {
+                // Tentativo 1: Chiusura app nativa/cordova se presente
+                if (navigator.app && navigator.app.exitApp) {
+                    navigator.app.exitApp();
+                    return;
+                }
+
+                // Tentativo 2: Chiusura scheda browser
+                window.close();
+
+                // Tentativo 3: Se il browser blocca window.close(), mostriamo la schermata di uscita pulita
+                document.body.innerHTML = `
+                    <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0d0f0e; color:#fff; text-align:center; padding:24px;">
+                        <div style="font-size:48px; margin-bottom:12px;">🧪</div>
+                        <h1 style="font-size:24px; font-weight:700; margin-bottom:8px; color:var(--accent-lime);">Pauper Lab Salva e Saluta!</h1>
+                        <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px; max-width:300px; line-height:1.4;">
+                            I tuoi dati sono stati protetti nel database del dispositivo.<br><br>Puoi chiudere questa scheda.
+                        </p>
+                        <button onclick="location.reload()" class="btn-lime" style="width:auto; padding:12px 24px;">🔄 Riapri App</button>
+                    </div>
+                `;
+            }, conBackup ? 400 : 50);
         }
 
         /* ESPORTAZIONE MATRICE IN PDF */
@@ -687,6 +685,7 @@
                 if(data.card_faces && data.card_faces.length > 1 && data.card_faces[0].image_uris) {
                     cardFacesCorrenti = data.card_faces.map(f => f.image_uris.normal);
                     localStorage.setItem('faces_cache_' + nomeCarta.toLowerCase(), JSON.stringify(cardFacesCorrenti));
+                    await salvaStatoCompleto();
                     document.getElementById('btnFlipCard').style.display = 'block';
                 }
             } catch(e) {}
@@ -724,6 +723,7 @@
 
                 if (imgUrl) {
                     localStorage.setItem(key, imgUrl);
+                    await salvaStatoCompleto();
                     imgEl.src = imgUrl;
                     renderUI();
                 }
@@ -764,7 +764,7 @@
                     const item = document.createElement('div');
                     item.className = 'art-picker-item';
                     item.innerHTML = `<img src="${imgUrl}" title="${print.set_name}">`;
-                    item.onclick = () => {
+                    item.onclick = async () => {
                         localStorage.setItem('img_cache_' + cartaCorrenteSelezionata.toLowerCase(), imgUrl);
                         document.getElementById('mdlCardImg').src = imgUrl;
                         document.querySelectorAll('.art-picker-item').forEach(el => el.classList.remove('selected'));
@@ -775,6 +775,7 @@
                             localStorage.setItem('faces_cache_' + cartaCorrenteSelezionata.toLowerCase(), JSON.stringify(cardFacesCorrenti));
                             document.getElementById('btnFlipCard').style.display = 'block';
                         }
+                        await salvaStatoCompleto();
                         renderUI();
                     };
                     grid.appendChild(item);
@@ -785,12 +786,11 @@
             }
         }
 
-        function impostaComeAvatarCorrente() {
+        async function impostaComeAvatarCorrente() {
             const currentDeck = db.find(d => d.id == activeDeckId);
             if(!currentDeck || !cartaCorrenteSelezionata) return;
             currentDeck.featuredCard = cartaCorrenteSelezionata;
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            salvamazzoCloud(currentDeck);
+            await salvaStatoCompleto();
             renderUI();
             chiudiModal('modalDetailCard');
         }
@@ -805,7 +805,7 @@
             document.getElementById('modalForkTest').style.display = 'flex';
         }
 
-        function confermaCreaVersioneTest() {
+        async function confermaCreaVersioneTest() {
             const currentDeck = db.find(d => d.id == activeDeckId);
             if (!currentDeck) return;
 
@@ -851,10 +851,8 @@
 
             db.push(newTestDeck);
             activeDeckId = newTestDeck.id;
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            localStorage.setItem('active_deck_id', activeDeckId);
+            await salvaStatoCompleto();
 
-            salvamazzoCloud(newTestDeck);
             chiudiModal('modalForkTest');
             renderUI();
             alert("Nuova versione test creata e selezionata!");
@@ -896,7 +894,7 @@
             document.getElementById('modalPartita').style.display = 'flex';
         }
 
-        function salvaMatchUI() {
+        async function salvaMatchUI() {
             const currentDeck = db.find(d => d.id == activeDeckId);
             if (!currentDeck) return;
 
@@ -917,20 +915,16 @@
                 });
             }
 
-            const newMatch = {
+            dbMatches.push({
                 id: Date.now(),
                 deckId: currentDeck.id,
                 deckName: currentDeck.nome,
                 opp, res, pd,
                 testFeedback,
                 data: new Date().toLocaleDateString()
-            };
+            });
 
-            dbMatches.push(newMatch);
-
-            localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
-            salvaMatchCloud(newMatch);
-
+            await salvaStatoCompleto();
             chiudiModal('modalPartita');
             renderPartite();
             renderMatriceETesting();
@@ -1069,7 +1063,7 @@
             }
 
             activeDeckId = currentDeck.id;
-            localStorage.setItem('active_deck_id', activeDeckId);
+            salvaStatoCompleto();
 
             document.getElementById('hdrDeckBreadcrumb').innerText = currentDeck.nome;
             document.getElementById('hdrDeckTitle').innerText = currentDeck.nome;
@@ -1178,8 +1172,7 @@
             document.getElementById(inputNameId).value = '';
             document.getElementById(inputQtaId).value = '1';
 
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            salvamazzoCloud(currentDeck);
+            await salvaStatoCompleto();
             renderUI();
             await scaricaImmagini([nomeInput]);
             renderUI();
@@ -1199,8 +1192,7 @@
                 mappaCarte[nomeCarta] = nuovaQta;
             }
 
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            salvamazzoCloud(currentDeck);
+            await salvaStatoCompleto();
             renderUI();
         }
 
@@ -1251,17 +1243,18 @@
                             localStorage.setItem('faces_cache_' + c.toLowerCase(), JSON.stringify(faces));
                         }
 
-                        if (imgUrl) localStorage.setItem(keyFront, imgUrl);
-                        await delay(100);
+                        if (imgUrl) {
+                            localStorage.setItem(keyFront, imgUrl);
+                            await salvaStatoCompleto();
+                        }
                     } catch (e) {}
                 }
             }
         }
 
         function apriModalNuovoMazzo() { document.getElementById('modalNuovoMazzo').style.display = 'flex'; }
-        function apriModalAuth() { document.getElementById('modalAuth').style.display = 'flex'; }
         
-        function creaNuovoMazzoIniziale() {
+        async function creaNuovoMazzoIniziale() {
             const nome = document.getElementById('inputNewDeckName').value.trim();
             if(!nome) { alert("Inserisci un nome!"); return; }
 
@@ -1275,10 +1268,8 @@
 
             db.push(newDeck);
             activeDeckId = newDeck.id;
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-            localStorage.setItem('active_deck_id', activeDeckId);
+            await salvaStatoCompleto();
 
-            salvamazzoCloud(newDeck);
             chiudiModal('modalNuovoMazzo');
             renderUI();
         }
@@ -1330,19 +1321,14 @@
                         });
                     }
 
-                    localStorage.setItem('pauper_decks', JSON.stringify(db));
-                    localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
-
                     if (db.length > 0) {
                         activeDeckId = db[0].id;
-                        localStorage.setItem('active_deck_id', activeDeckId);
                     }
 
-                    if (currentUser) await sincronizzaCloudCompleta();
-
+                    await salvaStatoCompleto();
                     renderUI();
                     chiudiModal('modalSettings');
-                    alert("Backup importato con successo!");
+                    alert("Backup importato e salvato sul dispositivo con successo!");
                 } catch (err) {
                     alert("Errore durante l'importazione del file JSON.");
                 }
@@ -1400,47 +1386,39 @@
             const deckIdsToRemove = [deckId, ...versioniDerivate.map(d => d.id)];
 
             db = db.filter(d => !deckIdsToRemove.includes(d.id));
-            localStorage.setItem('pauper_decks', JSON.stringify(db));
-
             dbMatches = dbMatches.filter(m => !deckIdsToRemove.includes(m.deckId));
-            localStorage.setItem('pauper_matches', JSON.stringify(dbMatches));
-
-            for (let idToRemove of deckIdsToRemove) {
-                await eliminaMazzoCloud(idToRemove);
-            }
 
             if (deckIdsToRemove.includes(parseInt(activeDeckId))) {
                 if (db.length > 0) {
                     activeDeckId = db[0].id;
-                    localStorage.setItem('active_deck_id', activeDeckId);
                 } else {
                     activeDeckId = null;
-                    localStorage.removeItem('active_deck_id');
                 }
             }
 
+            await salvaStatoCompleto();
             renderElencoMazziModale();
             renderUI();
         }
 
-        function apriMazzoPerId(id) {
+        async function apriMazzoPerId(id) {
             activeDeckId = id;
-            localStorage.setItem('active_deck_id', id);
+            await salvaStatoCompleto();
             renderUI();
             chiudiModal('modalMazziList');
         }
 
-        function pulisciCacheImmagini() {
+        async function pulisciCacheImmagini() {
             Object.keys(localStorage).forEach(k => { 
                 if(k.startsWith('img_cache_') || k.startsWith('faces_cache_')) localStorage.removeItem(k); 
             });
-            alert("Cache svuotata!");
+            await salvaValoreIDB('images_cache_bundle', {});
+            alert("Cache immagini svuotata!");
             renderUI();
         }
 
-        /* INIZIALIZZAZIONE */
-        inizializzaAuthSupabase();
-        renderUI();
+        // Avvio app con recupero dati profondo
+        inizializzaApp();
     </script>
 </body>
 </html>
